@@ -38,7 +38,6 @@ module rsc_iota_imp::bet;
     wager: coin::Coin<T>,
     p1: address, 
     p2: address, 
-    oracle: &Oracle,
     ctx: &mut TxContext
     ){
       let bet = Bet<T>{
@@ -46,7 +45,7 @@ module rsc_iota_imp::bet;
           amount: wager,
           player1: p1,
           player2: p2,
-          startcount: timestamp_ms(clock) + oracle.deadline
+          startcount: timestamp_ms(clock) 
         };
         transfer::share_object(bet);
     }
@@ -75,51 +74,12 @@ module rsc_iota_imp::bet;
     transfer::public_transfer(wager1, p2);
   }
 
-
 #[test_only]
-public fun create_oracle(id_oracle: address, dl: u64, ctx: &mut TxContext): Oracle{ 
-  Oracle {
-    id : object::new(ctx),
-    addr: id_oracle,
-    deadline: dl 
-  }
+public fun destroy(self:Oracle){
+  let Oracle {id: id, addr: _, deadline: _} = self;
+  object::delete(id);
 }
 
-#[test]
-public fun bet_test(){
-  use iota::test_scenario;
-  use iota::iota::IOTA;
-  
-  let admin: address = @0xFFFF;
-  let player1: address = @0xCAFE;
-  let player2: address = @0xFACE;
-  let oracle: address = @0xADD;
-
-  let mut scenario = test_scenario::begin(oracle);
-  {
-    initialize(oracle, 200000, test_scenario::ctx(&mut scenario));
-  };
-  test_scenario::next_tx(&mut scenario, player1);
-  {
-    assert!(test_scenario::has_most_recent_shared<Oracle>(), EEmptyInventory);
-    let ctx = test_scenario::ctx(&mut scenario);
-    let oracle = create_oracle(oracle, 200000, ctx);
-    let cl = clock::create_for_testing(ctx);
-    let coin = coin::mint_for_testing<IOTA>(10, ctx);
-    join(& cl, 
-    coin,
-    player1, 
-    player2, 
-    & oracle, 
-    ctx);
-    //this assert need the finish of this transaction.
-    //At the start of the next transaction become possible check this out
-    //assert!(test_scenario::has_most_recent_shared<Bet<IOTA>>(), EEmptyInventory);
-    cl.destroy_for_testing();
-    let Oracle { id: id_oracle, addr: _, deadline: _} = oracle;
-    object::delete(id_oracle);
-  };
-  //test_scenario::next_tx(&mut scenario, oracle);
-  test_scenario::end( scenario);
-  //do some test to win function 
+public fun deadline(self:&Oracle): u64{
+  self.deadline
 }
