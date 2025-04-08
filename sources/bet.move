@@ -1,13 +1,12 @@
 module rsc_iota_imp::bet;
 
   use iota::coin;
-  use iota::clock::{Self, Clock, timestamp_ms};
+  use iota::clock::{Clock, timestamp_ms};
 
   const EOverTimeLimit: u64 = 0;
   const EWinnerNotPlayer: u64  = 1;
   const EPermissionDenied: u64  = 2;
   const ETimeIsNotFinish: u64 = 3;
-  const EEmptyInventory: u64 = 4;
 
   // unit of measurement in milliseconds
     
