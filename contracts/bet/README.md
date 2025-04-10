@@ -17,3 +17,23 @@ After creation, the following actions are possible:
 - Multisig transactions
 - Time constraints
 - Transaction revert
+
+## Installation
+
+To install iota and all necessary dependencies you can see the [IOTA Installation guide](https://docs.iota.org/developer/getting-started/install-iota).
+
+## Usage
+
+Use the following command to build the project:
+
+```bash
+iota move build
+```
+
+Use the following command to run all tests:
+
+```bash
+iota move test
+```
+
+
