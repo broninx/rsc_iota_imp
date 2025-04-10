@@ -20,7 +20,7 @@ After creation, the following actions are possible:
 
 ## Installation
 
-To install iota and all necessary dependencies you can see the [IOTA Installation guide](https://docs.iota.org/developer/getting-started/install-iota).
+To install IOTA and all necessary dependencies you can see the [IOTA Installation guide](https://docs.iota.org/developer/getting-started/install-iota).
 
 ## Usage
 
