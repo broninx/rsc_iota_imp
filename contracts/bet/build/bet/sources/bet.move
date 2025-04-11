@@ -8,7 +8,6 @@ module bet::bet;
   const EPermissionDenied: u64  = 2;
   const ETimeIsNotFinish: u64 = 3;
 
-  // unit of measurement in milliseconds
     
   public struct Oracle has key, store {
     id: UID,
@@ -20,7 +19,8 @@ module bet::bet;
       amount: coin::Coin<T>,
       player1: address,
       player2: address,
-      startcount: u64
+      oracle: address,
+      timeout: u64
     }
 
   public entry fun initialize (o: address, dl: u64, ctx: &mut TxContext){
@@ -37,6 +37,7 @@ module bet::bet;
     wager: coin::Coin<T>,
     p1: address, 
     p2: address, 
+    oracle: &Oracle,
     ctx: &mut TxContext
     ){
       let bet = Bet<T>{
@@ -44,26 +45,27 @@ module bet::bet;
           amount: wager,
           player1: p1,
           player2: p2,
-          startcount: timestamp_ms(clock) 
+          oracle: oracle.addr,
+          timeout: timestamp_ms(clock) + oracle.deadline 
         };
         transfer::share_object(bet);
     }
   
-  public fun win<T> (bet: Bet<T>, oracle: &Oracle, winner: address, clock: &Clock, ctx: &mut TxContext) {
-    assert!(timestamp_ms(clock) < bet.startcount + oracle.deadline, EOverTimeLimit);
+  public fun win<T> (bet: Bet<T>, winner: address, clock: &Clock, ctx: &mut TxContext) {
+    assert!(timestamp_ms(clock) < bet.timeout, EOverTimeLimit);
     assert!(winner == bet.player1 || winner == bet.player2, EWinnerNotPlayer);
-    assert!(oracle.addr == ctx.sender(), EPermissionDenied);
+    assert!(bet.oracle == ctx.sender(), EPermissionDenied);
 
-    let Bet {id: id,amount: wager, player1: _, player2: _, startcount: _} = bet;
+    let Bet {id: id,amount: wager, player1: _, player2: _,oracle: _, timeout: _} = bet;
     transfer::public_transfer(wager, winner);
 
 
     object::delete(id);
     }
   
-  public fun timeout<T> (bet: Bet<T>, oracle: &Oracle, clock: &Clock, ctx: &mut TxContext){
-    assert!(clock.timestamp_ms() > (bet.startcount + oracle.deadline), ETimeIsNotFinish);
-    let Bet {id: id,amount: wager, player1: p1, player2: p2, startcount: _} = bet;
+  public fun timeout<T> (bet: Bet<T>, clock: &Clock, ctx: &mut TxContext){
+    assert!(clock.timestamp_ms() > bet.timeout, ETimeIsNotFinish);
+    let Bet {id: id,amount: wager, player1: p1, player2: p2,oracle: _, timeout: _} = bet;
     object::delete(id);
     let amount = wager.value();
     let mut wager = wager;
