@@ -18,3 +18,13 @@ After creation, the following actions are possible:
 - Time constraints
 - Transaction revert
 
+## Implementation differences
+
+Below there are some of the most important differences in the bet implementation between Move diales like Aptos or SUI, and IOTA.
+
+- **Aptos**: Use global ownership for all shared structs to enhance system security and employ local timestamps for deadline tracking
+
+- **IOTA**: Use shared ownership for all shared structs to improve transaction parallelism, and rely on a global clock for deadline enforcement
+
+- **SUI**: similar to IOTA’s design.
+
