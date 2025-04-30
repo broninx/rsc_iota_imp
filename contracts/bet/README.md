@@ -17,7 +17,7 @@ After creation, the following actions are possible:
 - Multisig transactions
 - Time constraints
 - Transaction revert
-## Imlementation
+## Implementation
 
 ### Introduction to IOTA
 
