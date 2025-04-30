@@ -17,6 +17,16 @@ After creation, the following actions are possible:
 - Multisig transactions
 - Time constraints
 - Transaction revert
+## Imlementation
+
+### Introduction to IOTA
+
+IOTA, a pioneering distributed ledger technology (DLT), diverges from traditional blockchains by utilizing the Tangle—a Directed Acyclic Graph (DAG) structure. This innovation eliminates blocks, chains, and miners, enabling feeless transactions, scalability, and energy efficiency. While initially focused on the Internet of Things (IoT), IOTA has expanded its capabilities to include IOTA Smart Contracts (ISC), a framework for programmable, decentralized agreements.
+
+In IOTA, every address (derived from a user’s seed) can hold balances of the native IOTA token (MIOTA) and custom digital assets (tokens or NFTs). Unlike traditional account-based blockchains, IOTA’s Tangle uses a UTXO ([Unspent Transaction Output](https://github.com/iotaledger/tips/blob/main/tips/TIP-0020/tip-0020.md#utxo)) model, where tokens are linked to addresses via outputs rather than stored in persistent accounts.
+
+To interact with the blockchain, users can submit several types of transactions to the network. 
+
 
 ## Implementation differences
 
