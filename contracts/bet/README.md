@@ -39,13 +39,62 @@ The fundamental unit of storage on IOTA is the object. Unlike many blockchains t
 
 A package's utility is defined by its modules. A module contains the logic for your package. You can create any number of modules per package. In this case the module is colled bet.
 
-```bash
+```move
 module bet::bet;
 ```
 
-In Move, the [init](https://docs.iota.org/developer/iota-101/move-overview/init) function plays a critical role during the module's lifecycle, executing only once at the moment of module publication.
-![init function]()
+#### Initialization
 
+In Move, the [init](https://docs.iota.org/developer/iota-101/move-overview/init) function plays a critical role during the module's lifecycle, executing only once at the moment of module publication.
+
+```move
+fun init (ctx: &mut TxContext){
+      let oracle = Oracle {
+        id: object::new(ctx),
+        addr: tx_context::sender(ctx),
+        deadline: 600000 // 10 min
+      };
+      transfer::share_object(oracle);
+  }
+```
+The function instantiates an oracle, which is subsequently shared across the system via the [transfer::share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function.
+
+#### Join
+
+The `Join` function enables the participation of two users in a mutually agreed wager.
+
+```move
+public fun join<T> (
+    clock: &Clock, 
+    wager: coin::Coin<T>,
+    p1: address, 
+    p2: address, 
+    oracle: &Oracle,
+    ctx: &mut TxContext
+    ){
+      let bet = Bet<T>{
+          id: object::new(ctx),
+          amount: wager,
+          player1: p1,
+          player2: p2,
+          oracle: oracle.addr,
+          timeout: timestamp_ms(clock) + oracle.deadline 
+        };
+        transfer::share_object(bet);
+    }
+```
+
+To call the `join` function we require six parameters to be passed to the contract:
+
+- **clock**: timestamp employed to record the initiation time of the wager;
+- **wager**: a [coin](https://docs.iota.org/references/framework/iota-framework/coin) that enable participants to commit either the network’s native token or externally-defined fungible tokens;
+- **p1 & p2**: two distinct addresses uniquely identify the counterparties involved in the wager;
+- **oracle**: the oracle that decide the winner of the wager;
+- **ctx**: [the transaction context](https://docs.iota.org/references/framework/testnet/iota-framework/tx_contex)
+
+The function instantiates an bet, which is subsequently shared across the system via the [transfer::share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function.
+
+#### Win
 
 ## Implementation differences
 
