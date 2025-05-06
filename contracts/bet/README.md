@@ -57,7 +57,7 @@ fun init (ctx: &mut TxContext){
       transfer::share_object(oracle);
   }
 ```
-The function instantiates an oracle, which is subsequently shared across the system via the [transfer::share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function.
+The function instantiates an oracle, which is subsequently shared across the chain via the [transfer::share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function and get accessible the oracle instance for reads and writes by any transaction.
 
 #### Join
 
@@ -92,9 +92,39 @@ To call the `join` function we require six parameters to be passed to the contra
 - **oracle**: the oracle that decide the winner of the wager;
 - **ctx**: [the transaction context](https://docs.iota.org/references/framework/testnet/iota-framework/tx_contex)
 
-The function instantiates an bet, which is subsequently shared across the system via the [transfer::share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function.
+The function instantiates an bet, which is subsequently shared across the system via the [transfer::share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function get accessible the bet instance for reads and writes by any transaction.
 
 #### Win
+After both players have joined the bet, the oracle is expected to determine the winner, calling the function `win`, who receives the whole pot.
+
+```move
+public fun win<T> (bet: Bet<T>, winner: address, clock: &Clock, ctx: &mut TxContext) {
+    assert!(timestamp_ms(clock) < bet.timeout, EOverTimeLimit);
+    assert!(winner == bet.player1 || winner == bet.player2, EWinnerNotPlayer);
+    assert!(bet.oracle == ctx.sender(), EPermissionDenied);
+
+    let Bet {id: id,amount: wager, player1: _, player2: _,oracle: _, timeout: _} = bet;
+    transfer::public_transfer(wager, winner);
+    object::delete(id);
+    }
+```
+To call the `win` function we require four parameters to be passed to the contract:
+
+- **bet**: includes all bet information, including the participating players, oracle, start time, wagered amount, and timeout duration;
+- **winner**: the address of the bet winner;
+- **clock**: timestamp to verify whether the time has expired;
+- **ctx**:[the transaction context](https://docs.iota.org/references/framework/testnet/iota-framework/tx_contex).
+
+The function begins with three assertion checks:
+
+- Validation that the winner determination timeframe has expired (via timestamp verification)
+- Confirmation that the declared winner's address matches either of the two registered player addresses
+- Authentication that the function caller holds the designated oracle role
+
+Upon successful validation of all assertions, the function initiates the bet resolution process. This involves the closure of the bet instance and the transfer of the entirety of the wager amount to the winner’s address via the [public_transfer](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-public_transfer) function.
+
+#### Timeout
+
 
 ## Implementation differences
 
