@@ -92,7 +92,7 @@ To call the `join` function we require six parameters to be passed to the contra
 - **oracle**: the oracle that decide the winner of the wager;
 - **ctx**: [the transaction context](https://docs.iota.org/references/framework/testnet/iota-framework/tx_contex)
 
-The function instantiates an bet, which is subsequently shared across the system via the [transfer::share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function get accessible the bet instance for reads and writes by any transaction.
+The function instantiates an bet, which is subsequently shared across the system via the [share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function get accessible the bet instance for reads and writes by any transaction.
 
 #### Win
 After both players have joined the bet, the oracle is expected to determine the winner, calling the function `win`, who receives the whole pot.
@@ -113,7 +113,7 @@ To call the `win` function we require four parameters to be passed to the contra
 - **bet**: includes all bet information, including the participating players, oracle, start time, wagered amount, and timeout duration;
 - **winner**: the address of the bet winner;
 - **clock**: timestamp to verify whether the time has expired;
-- **ctx**:[the transaction context](https://docs.iota.org/references/framework/testnet/iota-framework/tx_contex).
+- **ctx**: [the transaction context](https://docs.iota.org/references/framework/testnet/iota-framework/tx_contex).
 
 The function begins with three assertion checks:
 
