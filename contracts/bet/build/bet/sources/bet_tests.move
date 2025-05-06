@@ -16,8 +16,10 @@ module bet::bet_tests {
 
 
 
-    public fun transaction1(scenario: &mut test_scenario::Scenario, oracle:address){
-        bet::initialize(oracle, 200000, test_scenario::ctx( scenario));
+    public fun transaction1(scenario: &mut test_scenario::Scenario){
+        let ctx = test_scenario::ctx(scenario);
+        let oracle = bet::create_oracle(ORACLE, 600000, ctx); 
+        bet::transfer_share_object(oracle);
     }
 
     public fun transactin2(scenario: &mut test_scenario::Scenario, oracle: &bet::Oracle){
@@ -37,7 +39,7 @@ module bet::bet_tests {
   
                 //transaction 1
         let mut scenario = test_scenario::begin(ORACLE);
-        transaction1(&mut scenario, ORACLE);
+        transaction1(&mut scenario);
 
 
         //transaction 2
@@ -73,7 +75,7 @@ module bet::bet_tests {
   
        //transaction 1
         let mut scenario = test_scenario::begin(ORACLE);
-        transaction1(&mut scenario, ORACLE);
+        transaction1(&mut scenario);
 
         //transaction 2
         test_scenario::next_tx(&mut scenario, PLAYER1);
@@ -113,7 +115,7 @@ module bet::bet_tests {
   
         //transaction 1
         let mut scenario = test_scenario::begin(ORACLE);
-        transaction1(&mut scenario, ORACLE);
+        transaction1(&mut scenario);
 
         //transaction 2
         test_scenario::next_tx(&mut scenario, PLAYER1);
@@ -148,7 +150,7 @@ module bet::bet_tests {
         
         //transaction 1
         let mut scenario = test_scenario::begin(ORACLE);
-        transaction1(&mut scenario, ORACLE);
+        transaction1(&mut scenario);
         
         //transaction 2
         test_scenario::next_tx(&mut scenario, PLAYER1);

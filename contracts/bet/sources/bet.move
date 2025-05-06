@@ -23,11 +23,11 @@ module bet::bet;
       timeout: u64
     }
 
-  public entry fun initialize (o: address, dl: u64, ctx: &mut TxContext){
+      fun init (ctx: &mut TxContext){
       let oracle = Oracle {
         id: object::new(ctx),
-        addr: o,
-        deadline: dl
+        addr: tx_context::sender(ctx),
+        deadline: 600000 // 10 min
       };
       transfer::share_object(oracle);
   }
@@ -84,3 +84,12 @@ public fun destroy(self:Oracle){
 public fun deadline(self:&Oracle): u64{
   self.deadline
 }
+
+public fun create_oracle(addr: address, deadline: u64,ctx: &mut TxContext): Oracle{
+  Oracle {id: object::new(ctx), addr: addr,deadline: deadline}
+}
+
+public fun transfer_share_object(obj: Oracle){
+  transfer::share_object(obj);
+}
+
