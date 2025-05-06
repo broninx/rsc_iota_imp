@@ -57,7 +57,7 @@ fun init (ctx: &mut TxContext){
       transfer::share_object(oracle);
   }
 ```
-The function instantiates an oracle, which is subsequently shared across the chain via the [transfer::share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function and get accessible the oracle instance for reads and writes by any transaction.
+The function instantiates an oracle, which is subsequently shared across the chain via the [share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function and get accessible the oracle instance for reads and writes by any transaction.
 
 #### Join
 
