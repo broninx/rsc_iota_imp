@@ -140,8 +140,7 @@ public fun timeout<T> (bet: Bet<T>, clock: &Clock, ctx: &mut TxContext){
 ```
 The timeout function is publicly accessible, meaning anyone can trigger it. When called, it first checks —via an initial `assert` statement— whether the predefined time limit has expired. Only if this condition is confirmed will the function execute, redistributing all funds exclusively back to the original parties.
 
-To achieve this, we first [unpack](https://docs.iota.org/developer/iota-101/move-overview/structs-and-abilities/struct#Unpacking-a-Stuct) the bet instance to close it and then we split the original coin into two equal halves and with the [public_transfer]
-(https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-public_transfer) function each portion return back to its respective participant.
+To achieve this, we first [unpack](https://docs.iota.org/developer/iota-101/move-overview/structs-and-abilities/struct#Unpacking-a-Stuct) the bet instance to close it and then we split the original coin into two equal halves and with the [public_transfer](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-public_transfer) function each portion return back to its respective participant.
 
 
 
