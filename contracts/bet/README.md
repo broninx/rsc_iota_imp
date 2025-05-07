@@ -121,9 +121,28 @@ The function begins with three assertion checks:
 - Confirmation that the declared winner's address matches either of the two registered player addresses
 - Authentication that the function caller holds the designated oracle role
 
-Upon successful validation of all assertions, the function initiates the bet resolution process. This involves the closure of the bet instance and the transfer of the entirety of the wager amount to the winner’s address via the [public_transfer](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-public_transfer) function.
+Upon successful validation of all assertions, the function initiates the bet resolution process. This involves the [unpack](https://docs.iota.org/developer/iota-101/move-overview/structs-and-abilities/struct#Unpacking-a-Stuct) the bet instance to close it and the transfer of the entirety of the wager amount to the winner’s address via the [public_transfer](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-public_transfer) function.
 
 #### Timeout
+
+```move
+public fun timeout<T> (bet: Bet<T>, clock: &Clock, ctx: &mut TxContext){
+    assert!(clock.timestamp_ms() > bet.timeout, ETimeIsNotFinish);
+    let Bet {id: id,amount: wager, player1: p1, player2: p2,oracle: _, timeout: _} = bet;
+    object::delete(id);
+    let amount = wager.value();
+    let mut wager = wager;
+
+    let wager1 = wager.split(amount / 2, ctx);
+    transfer::public_transfer(wager, p1);
+    transfer::public_transfer(wager1, p2);
+  }
+```
+The timeout function is publicly accessible, meaning anyone can trigger it. When called, it first checks —via an initial `assert` statement— whether the predefined time limit has expired. Only if this condition is confirmed will the function execute, redistributing all funds exclusively back to the original parties.
+
+To achieve this, we first [unpack](https://docs.iota.org/developer/iota-101/move-overview/structs-and-abilities/struct#Unpacking-a-Stuct) the bet instance to close it and then we split the original coin into two equal halves and with the [public_transfer]
+(https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-public_transfer) function each portion return back to its respective participant.
+
 
 
 ## Implementation differences
