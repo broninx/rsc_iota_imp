@@ -15,8 +15,6 @@ public struct Wallet has key {
     initialized: bool
 } 
 
-
-//TODO: find solution
 fun init( ctx: &mut TxContext){
     let wallet = Wallet {
         id: object::new(ctx),
