@@ -51,7 +51,7 @@ module bet::bet_tests {
             test_scenario::return_shared(oracle);
         };
 
-        //transaction 3, case 1: the oracle predict the winner before the timeout
+        //transaction 3, case 1: the oracle predict the winner before timeover
         test_scenario::next_tx(&mut scenario, ORACLE);
         {
             assert!(test_scenario::has_most_recent_shared<bet::Bet<IOTA>>(), EEmptyInventory);
@@ -103,10 +103,6 @@ module bet::bet_tests {
 
         test_scenario::end( scenario);
     }
-// #[test, expected_failure(abort_code = ::rsc_iota_imp::rsc_iota_imp_tests::ENotImplemented)]
-//     fun test_rsc_iota_imp_fail() {
-//         abort ENotImplemented
-//     }
 
 
     #[test, expected_failure(abort_code = bet::EOverTimeLimit)]
@@ -126,7 +122,7 @@ module bet::bet_tests {
             test_scenario::return_shared(oracle);
         };
 
-        //transaction 3, case 3: the oracle predict the winner after the time_out (expected abort)
+        //transaction 3, case 3: oracle predict the winner over the time (expected abort)
         test_scenario::next_tx(&mut scenario, ORACLE);
         {
             assert!(test_scenario::has_most_recent_shared<bet::Bet<IOTA>>(), EEmptyInventory);
