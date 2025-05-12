@@ -32,7 +32,7 @@ public fun intended_way() {
         let ctx = test_scenario::ctx(&mut scenario);
         simple_transfer::set_receiver(RECEIVER,&mut wallet, ctx);
         let coin = coin::mint_for_testing<IOTA>(10000, ctx);
-        simple_transfer::deposite(coin, &mut wallet, ctx);
+        simple_transfer::deposit(coin, &mut wallet, ctx);
         test_scenario::return_shared(wallet);
     };
 
@@ -93,7 +93,7 @@ public fun receiver_just_setted() {
 }
 
 #[test, expected_failure(abort_code = simple_transfer::EPermissionsDenied)]
-public fun receiver_cant_deposite() {
+public fun receiver_cant_deposit() {
     
     let mut scenario = test_scenario::begin(OWNER);
     transaction1(&mut scenario);
@@ -111,7 +111,7 @@ public fun receiver_cant_deposite() {
         let mut wallet = test_scenario::take_shared<Wallet>(&scenario);
         let ctx = test_scenario::ctx(&mut scenario);
         let coin = coin::mint_for_testing<IOTA>(10000, ctx);
-        simple_transfer::deposite(coin, &mut wallet, ctx);
+        simple_transfer::deposit(coin, &mut wallet, ctx);
         test_scenario::return_shared(wallet);
     };
 
@@ -130,7 +130,7 @@ public fun only_receiver_withdrow() {
         let ctx = test_scenario::ctx(&mut scenario);
         simple_transfer::set_receiver(RECEIVER,&mut wallet, ctx);
         let coin = coin::mint_for_testing<IOTA>(10000, ctx);
-        simple_transfer::deposite(coin, &mut wallet, ctx);
+        simple_transfer::deposit(coin, &mut wallet, ctx);
         test_scenario::return_shared(wallet);
     };
 
@@ -158,7 +158,7 @@ public fun withdorw_amount_bigger_than_balance() {
         let ctx = test_scenario::ctx(&mut scenario);
         simple_transfer::set_receiver(RECEIVER,&mut wallet, ctx);
         let coin = coin::mint_for_testing<IOTA>(10000, ctx);
-        simple_transfer::deposite(coin, &mut wallet, ctx);
+        simple_transfer::deposit(coin, &mut wallet, ctx);
         test_scenario::return_shared(wallet);
     };
 
