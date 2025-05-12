@@ -96,3 +96,14 @@ The withdraw function enables the designated receiver to claim funds from the Wa
 2. Balance Management: The balance is split into two parts: the portion requested by the receiver and the residual funds retained in the Wallet.
 3. Token Conversion: The withdrawal amount (stored as a Balance type) is converted into a Coin using the [from_balance](https://docs.iota.org/references/framework/iota-framework/coin#0x2_coin_from_balance) function, as the Balance type lacks [key abilities](https://docs.iota.org/developer/iota-101/move-overview/structs-and-abilities/key).
 4. Funds Transfer: The converted Coin is sent to the receiver using the [transfer](https://docs.iota.org/references/framework/devnet/iota-framework/iota#0x2_iota_transfer) function from the [iota module](https://docs.iota.org/references/framework/devnet/iota-framework/iota), completing the withdrawal.
+
+
+## Implementation differences
+
+Below there are some of the most important differences in the simple transfer implementation between Move diales like Aptos or SUI, and IOTA.
+
+1. Init:
+   - **Aptos**: the init function is a special one-time initialization function that automatically executes during the deployment of a module. It accepts a &signer parameter (representing the deployer’s address) and is used to set up initial on-chain state, such as creating global resources or configuring module settings. The function also accepts optional parameters, enabling the implementation to fully comply with the requirements of a simple transfer.
+   - **IOTA**: The init function in IOTA smart contracts is limited to two parameters: the one-time witness (otw) and the transaction context. This constraint prevents assigning a receiver address during contract deployment. To work around this, I designed a single-call function that can be executed once after deployment to securely define the receiver.
+   - **Sui**: Like IOTA's initialization function, Sui's implementation faces a similar limitation, necessitating a purpose-built workaround to resolve this constraint.
+2. Deposite: 
