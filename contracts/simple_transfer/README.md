@@ -107,7 +107,7 @@ Init: the init function is a special one-time initialization function that autom
    - **IOTA**: The init function in IOTA smart contracts is limited to two parameters: the one-time witness (otw) and the transaction context. This constraint prevents assigning a receiver address during contract deployment. To work around this, I designed a single-call function that can be executed once after deployment to securely define the receiver.
    - **SUI**: Like IOTA's initialization function, Sui's implementation faces a similar limitation, necessitating a purpose-built workaround to resolve this constraint.
 
-Native token: 
-    - **Aptos**: In Aptos, native tokens and custom tokens are both managed through the framework's coin standard.
-    - **IOTA**: the IOTA coin type is managed on [iota module](https://docs.iota.org/references/framework/iota-framework/iota), whereas custom tokens are created and governed through Move's standardized [coin module](https://docs.iota.org/references/framework/iota-framework/coin).
-    - **SUI**: in SUI, native tokens and custom tokens are both managed through the framework's coin standard, but treats the native token as a privileged object, while custom tokens follow standard Coin<T> patterns.
+Native token:
+- **Aptos**: In Aptos, native tokens and custom tokens are both managed through the framework's coin standard.
+- **IOTA**: the IOTA coin type is managed on [iota module](https://docs.iota.org/references/framework/iota-framework/iota), whereas custom tokens are created and governed through Move's standardized [coin module](https://docs.iota.org/references/framework/iota-framework/coin).
+- **SUI**: in SUI, native tokens and custom tokens are both managed through the framework's coin standard, but treats the native token as a privileged object, while custom tokens follow standard Coin<T> patterns.
