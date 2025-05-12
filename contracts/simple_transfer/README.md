@@ -102,9 +102,12 @@ The withdraw function enables the designated receiver to claim funds from the Wa
 
 Below there are some of the most important differences in the simple transfer implementation between Move diales like Aptos or SUI, and IOTA.
 
-Init:the init function is a special one-time initialization function that automatically executes during the deployment of a module.
+Init: the init function is a special one-time initialization function that automatically executes during the deployment of a module.
    - **Aptos**: it accepts a &signer parameter (representing the deployer’s address) and is used to set up initial on-chain state, such as creating global resources or configuring module settings. The function also accepts optional parameters, enabling the implementation to fully comply with the requirements of a simple transfer.
    - **IOTA**: The init function in IOTA smart contracts is limited to two parameters: the one-time witness (otw) and the transaction context. This constraint prevents assigning a receiver address during contract deployment. To work around this, I designed a single-call function that can be executed once after deployment to securely define the receiver.
-   - **Sui**: Like IOTA's initialization function, Sui's implementation faces a similar limitation, necessitating a purpose-built workaround to resolve this constraint.
+   - **SUI**: Like IOTA's initialization function, Sui's implementation faces a similar limitation, necessitating a purpose-built workaround to resolve this constraint.
 
-2 Native token: 
+Native token: 
+    - **Aptos**: In Aptos, native tokens and custom tokens are both managed through the framework's coin standard.
+    - **IOTA**: the IOTA coin type is managed on [iota module](https://docs.iota.org/references/framework/iota-framework/iota), whereas custom tokens are created and governed through Move's standardized [coin module](https://docs.iota.org/references/framework/iota-framework/coin).
+    - **SUI**: in SUI, native tokens and custom tokens are both managed through the framework's coin standard, but treats the native token as a privileged object, while custom tokens follow standard Coin<T> patterns.
