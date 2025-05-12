@@ -62,7 +62,7 @@ Once executed, the `initialized` flag permanently blocks re-invocation of `set_r
 ### Deposite
 
 ```move
-public fun deposite(amount: Coin<IOTA>,wallet:&mut Wallet, ctx: &mut TxContext){
+public fun deposit(amount: Coin<IOTA>,wallet:&mut Wallet, ctx: &mut TxContext){
     assert!(ctx.sender() == wallet.owner, EPermissionsDenied);
     
     let balance_to_deposite = coin::into_balance<IOTA>(amount);
@@ -102,8 +102,9 @@ The withdraw function enables the designated receiver to claim funds from the Wa
 
 Below there are some of the most important differences in the simple transfer implementation between Move diales like Aptos or SUI, and IOTA.
 
-1. Init:
-   - **Aptos**: the init function is a special one-time initialization function that automatically executes during the deployment of a module. It accepts a &signer parameter (representing the deployer’s address) and is used to set up initial on-chain state, such as creating global resources or configuring module settings. The function also accepts optional parameters, enabling the implementation to fully comply with the requirements of a simple transfer.
+Init:the init function is a special one-time initialization function that automatically executes during the deployment of a module.
+   - **Aptos**: it accepts a &signer parameter (representing the deployer’s address) and is used to set up initial on-chain state, such as creating global resources or configuring module settings. The function also accepts optional parameters, enabling the implementation to fully comply with the requirements of a simple transfer.
    - **IOTA**: The init function in IOTA smart contracts is limited to two parameters: the one-time witness (otw) and the transaction context. This constraint prevents assigning a receiver address during contract deployment. To work around this, I designed a single-call function that can be executed once after deployment to securely define the receiver.
    - **Sui**: Like IOTA's initialization function, Sui's implementation faces a similar limitation, necessitating a purpose-built workaround to resolve this constraint.
-2. Deposite: 
+
+2 Native token: 
