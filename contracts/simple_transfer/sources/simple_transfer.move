@@ -34,7 +34,7 @@ public fun set_receiver(receiver: address,wallet: &mut Wallet, ctx: &mut TxConte
     wallet.initialized = true;
 }
 
-public fun deposite(amount: Coin<IOTA>,wallet:&mut Wallet, ctx: &mut TxContext){
+public fun deposit(amount: Coin<IOTA>,wallet:&mut Wallet, ctx: &mut TxContext){
     assert!(ctx.sender() == wallet.owner, EPermissionsDenied);
     
     let balance_to_deposite = coin::into_balance<IOTA>(amount);
