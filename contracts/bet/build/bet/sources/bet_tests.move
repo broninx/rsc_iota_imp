@@ -34,7 +34,7 @@ module bet::bet_tests {
 
 
     #[test]
-    public fun bet_test_intended_way(){
+    public fun intended_way(){
         
   
                 //transaction 1
@@ -51,7 +51,7 @@ module bet::bet_tests {
             test_scenario::return_shared(oracle);
         };
 
-        //transaction 3, case 1: the oracle predict the winner before the timeout
+        //transaction 3, case 1: the oracle predict the winner before timeover
         test_scenario::next_tx(&mut scenario, ORACLE);
         {
             assert!(test_scenario::has_most_recent_shared<bet::Bet<IOTA>>(), EEmptyInventory);
@@ -70,7 +70,7 @@ module bet::bet_tests {
 
 
     #[test]
-    public fun bet_test_timeout(){
+    public fun timeout(){
         
   
        //transaction 1
@@ -103,14 +103,10 @@ module bet::bet_tests {
 
         test_scenario::end( scenario);
     }
-// #[test, expected_failure(abort_code = ::rsc_iota_imp::rsc_iota_imp_tests::ENotImplemented)]
-//     fun test_rsc_iota_imp_fail() {
-//         abort ENotImplemented
-//     }
 
 
     #[test, expected_failure(abort_code = bet::EOverTimeLimit)]
-    public fun bet_test_set_winner_over_time(){
+    public fun set_winner_over_time(){
         
   
         //transaction 1
@@ -126,7 +122,7 @@ module bet::bet_tests {
             test_scenario::return_shared(oracle);
         };
 
-        //transaction 3, case 3: the oracle predict the winner after the time_out (expected abort)
+        //transaction 3, case 3: oracle predict the winner over the time (expected abort)
         test_scenario::next_tx(&mut scenario, ORACLE);
         {
             assert!(test_scenario::has_most_recent_shared<bet::Bet<IOTA>>(), EEmptyInventory);
@@ -145,7 +141,7 @@ module bet::bet_tests {
 
 
     #[test, expected_failure(abort_code = bet::EPermissionDenied)]
-    public fun bet_test_permission_denied(){
+    public fun permission_denied_win(){
 
         
         //transaction 1
@@ -176,4 +172,73 @@ module bet::bet_tests {
         };
         test_scenario::end( scenario);
     }
+
+    #[test, expected_failure( abort_code = bet::EWinnerNotPlayer)]
+    public fun winner_not_player(){
+        
+  
+        //transaction 1
+        let mut scenario = test_scenario::begin(ORACLE);
+        transaction1(&mut scenario);
+
+
+        //transaction 2
+        test_scenario::next_tx(&mut scenario, PLAYER1);
+        {
+            assert!(test_scenario::has_most_recent_shared<bet::Oracle>(), EEmptyInventory);
+            let oracle = test_scenario::take_shared<bet::Oracle>(& scenario);
+            transactin2(&mut scenario, &oracle);
+            test_scenario::return_shared(oracle);
+        };
+
+        test_scenario::next_tx(&mut scenario, ORACLE);
+        {
+            assert!(test_scenario::has_most_recent_shared<bet::Bet<IOTA>>(), EEmptyInventory);
+
+            let bet = test_scenario::take_shared<bet::Bet<IOTA>>(&scenario); 
+            let oracle = test_scenario::take_shared<bet::Oracle>(&scenario); 
+            let ctx = test_scenario::ctx(&mut scenario);
+            let cl = clock::create_for_testing(ctx);
+            bet::win(bet, ORACLE,&cl,ctx);
+            cl.destroy_for_testing();
+            oracle.destroy();
+        };
+
+        test_scenario::end( scenario);
+    }
+
+    #[test, expected_failure(abort_code = bet::ETimeIsNotFinish)]
+    public fun timeout_before_finish(){
+        
+  
+       //transaction 1
+        let mut scenario = test_scenario::begin(ORACLE);
+        transaction1(&mut scenario);
+
+        //transaction 2
+        test_scenario::next_tx(&mut scenario, PLAYER1);
+        {
+            assert!(test_scenario::has_most_recent_shared<bet::Oracle>(), EEmptyInventory);
+            let oracle = test_scenario::take_shared<bet::Oracle>(& scenario);
+            transactin2(&mut scenario, &oracle);
+            test_scenario::return_shared(oracle);
+        };
+
+        //transaction 3, case 2: the time is over
+        test_scenario::next_tx(&mut scenario, PLAYER1);
+        {
+            assert!(test_scenario::has_most_recent_shared<bet::Bet<IOTA>>(), EEmptyInventory);
+            let bet = test_scenario::take_shared<bet::Bet<IOTA>>(&scenario); 
+            let oracle = test_scenario::take_shared<bet::Oracle>(&scenario); 
+            let ctx = test_scenario::ctx(&mut scenario);
+            let mut cl = clock::create_for_testing(ctx);
+            cl.increment_for_testing(oracle.deadline() - 1);
+            bet::timeout(bet, &cl,ctx);
+            cl.destroy_for_testing();
+            oracle.destroy()
+        };
+
+        test_scenario::end( scenario);
+    }
 }
+

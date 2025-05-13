@@ -93,6 +93,3 @@ public fun transfer_share_object(obj: Oracle){
   transfer::share_object(obj);
 }
 
-// let ctx = test_scenario::ctx(&mut scenario);
-// let oracle = bet::create_oracle(ORACLE, 600000, ctx); 
-// bet::transfer_share_object(oracle);
