@@ -29,13 +29,11 @@ In IOTA, every address can hold balances of the native IOTA token (MIOTA) and cu
 
 In IOTA, a foundational transaction type is the [user transaction](https://docs.iota.org/developer/iota-101/transactions/), which enables users to interact with smart contract and transfer assets, specially allow to send IOTA tokens (such as IOTA or MIOTA) between addresses. Each transaction specifies the sender’s address, the receiver’s address, and the amount of tokens being sent.Beyond basic value transfers, IOTA supports custom token transfers through its native tokenization framework.These transactions function allow users to create and send [custom assets](vhttps://docs.iota.org/developer/iota-101/create-coin/).
 
-To coordinate multiple interdependent actions, IOTA uses atomic bundles like [PTBs](https://docs.iota.org/developer/iota-101/transactions/ptb/programmable-transaction-blocks), which group transactions into a single atomic unit. If any transaction in the bundle fails —due to invalid inputs, insufficient balances, or a smart contract error— all transactions in the bundle are discarded,guaranteeing atomicity.
+The fundamental unit of storage on IOTA is the object. Unlike many blockchains that focus on accounts containing key-value stores, IOTA's storage model centers around objects, each of which is addressable on-chain by a unique ID. In IOTA, a smart contract is an object known as a [package](https://docs.iota.org/references/framework/iota-framework/package), and these smart contracts interact with other objects on the IOTA network.
 
 We will take a look at how a simple bet contract can be implemented in IOTA, using Move language.
 
 ### Logic Core
-
-The fundamental unit of storage on IOTA is the object. Unlike many blockchains that focus on accounts containing key-value stores, IOTA's storage model centers around objects, each of which is addressable on-chain by a unique ID. In IOTA, a smart contract is an object known as a [package](https://docs.iota.org/references/framework/iota-framework/package), and these smart contracts interact with other objects on the IOTA network.
 
 A package's utility is defined by its modules. A module contains the logic for your package. You can create any number of modules per package. In this case the module is colled bet.
 

@@ -16,7 +16,7 @@ After contract creation, the contract supports two actions:
 - Native tokens
 - Transaction revert
 
-## Simpe Transfer implementation
+## Implementation
 
 ### Initialization
 
@@ -108,6 +108,6 @@ Init: the init function is a special one-time initialization function that autom
    - **SUI**: Like IOTA's initialization function, Sui's implementation faces a similar limitation, necessitating a purpose-built workaround to resolve this constraint.
 
 Native token:
-- **Aptos**: In Aptos, native tokens and custom tokens are both managed through the framework's coin standard.
-- **IOTA**: the IOTA coin type is managed on [iota module](https://docs.iota.org/references/framework/iota-framework/iota), whereas custom tokens are created and governed through Move's standardized [coin module](https://docs.iota.org/references/framework/iota-framework/coin).
-- **SUI**: in SUI, native tokens and custom tokens are both managed through the framework's coin standard, but treats the native token as a privileged object, while custom tokens follow standard Coin<T> patterns.
+- **Aptos**: In Aptos, native tokens ollows the generic standard but is privileged (e.g., only APT can be used for gas).
+- **IOTA**: The IOTA token is the lifeblood of the network, enabling feeless transactions, consensus via mana, and protocol-level security.
+- **SUI**: Sui Move shares similarities with Aptos Move in how they manage native tokens.
