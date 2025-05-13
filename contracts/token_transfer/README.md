@@ -48,3 +48,20 @@ The set_balance_and_receiver function accepts three inputs:
 3. The transaction context
 
 First, it verifies that the `initialized` flag is set to `true` and confirms the transaction sender is the authorized owner of the wallet. If both checks succeed, the function decommissions the original wallet (created during contract deployment) and dynamically generates a replacement wallet. This new wallet retains the original owner but updates the `balance` to reflect the token type specified in the function call, assigns the provided `receiver` address, and resets the `initialized` flag to true. Finally, the system destroys the IOTA token balance and the unique identifier ([UID](https://docs.iota.org/developer/iota-101/objects/uid-id)) of the old wallet and publishes the updated wallet to the contract.
+
+## Implementation differences
+
+In their initialization functions, Aptos, IOTA, and SUI exhibit differences analogous to [simple transfer](https://github.com/broninx/rsc_iota_imp/tree/main/contracts/simple_transfer) logic. Additionally, IOTA restricts the contract owner from setting the token balance during deployment, requiring adjustments post-creation instead, a limitation tied to its architectural design, similar to the problem with the "receiver" in simple transfer. SUI follows a pattern comparable to IOTA in this regard. In contrast, Aptos aligns seamlessly with specifications, enabling direct configuration of token balances at deployment time without requiring post-creation modifications. 
+
+Custom tokens:
+- **Aptos**: Generic tokens are flexible, user-defined assets built on Move’s resource model, leveraging Aptos’ security but operating at the application layer. Like native token, generic tokens are menaged with the [coin standard](https://github.com/aptos-labs/aptos-core/blob/main/aptos-move/framework/aptos-framework/sources/coin.move).
+- **IOTA**: Generic tokens are application-specific assets built on top of IOTA, leveraging its infrastructure but operating through higher-layer modules without affecting core network mechanics.
+In the IOTA framework, custom tokens and native tokens are managed in two distinct modules: the [coin module](https://docs.iota.org/references/framework/iota-framework/coin) handles custom tokens, while the [iota module](https://docs.iota.org/references/framework/testnet/iota-framework/iota) is responsible for native tokens.
+- **SUI**:  Sui shares similarities with Aptos in how they manage generic tokens, but key differences arise from Sui’s object-centric model and unique programming paradigm. Also in SUI, like native token, generic tokens are menaged with the [coin module](https://docs.sui.io/references/framework/sui/coin).
+
+
+
+
+
+
+Notably, IOTA (due to its receiver-centric design) and SUI (which shares similarities with IOTA in this regard) restrict contract owners from predefining token balances during deployment, requiring such configurations to occur after contract creation. In contrast,Aptos maintains a coherent, streamlined approach by enabling precise token balance allocation directly at deployment time, aligning with its design specifications.
