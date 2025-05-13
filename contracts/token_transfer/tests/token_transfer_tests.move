@@ -1,5 +1,5 @@
 #[test_only]
-module token_transfer::simple_transfer_tests;
+module token_transfer::token_transfer_tests;
 
 use token_transfer::token_transfer::{Self, Wallet};
 use iota::test_scenario;
