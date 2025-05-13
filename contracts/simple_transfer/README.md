@@ -16,7 +16,7 @@ After contract creation, the contract supports two actions:
 - Native tokens
 - Transaction revert
 
-## Simpe Transfer implementation
+## Implementation
 
 ### Initialization
 
