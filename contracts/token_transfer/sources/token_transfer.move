@@ -57,3 +57,19 @@ public fun withdrow<T>(amount: u64, wallet: &mut Wallet<T>, ctx: &mut TxContext)
     let withdrow_coin = coin::from_balance(withdrow_balance, ctx);
     transfer::public_transfer(withdrow_coin, wallet.receiver);
 }
+
+#[test_only]
+public fun wallet_amount<T>(wallet: &Wallet<T>): u64 {
+    wallet.balance.value()
+}
+
+entry fun initialize(ctx: &mut TxContext){
+    let wallet = Wallet {
+        id: object::new(ctx),
+        balance: balance::zero<IOTA>(),
+        owner: ctx.sender(),
+        receiver: ctx.sender(),
+        initialized: false
+    };
+    transfer::share_object(wallet);
+}
