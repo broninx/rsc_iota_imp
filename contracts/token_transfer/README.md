@@ -58,10 +58,3 @@ Custom tokens:
 - **IOTA**: Generic tokens are application-specific assets built on top of IOTA, leveraging its infrastructure but operating through higher-layer modules without affecting core network mechanics.
 In the IOTA framework, custom tokens and native tokens are managed in two distinct modules: the [coin module](https://docs.iota.org/references/framework/iota-framework/coin) handles custom tokens, while the [iota module](https://docs.iota.org/references/framework/testnet/iota-framework/iota) is responsible for native tokens.
 - **SUI**:  Sui shares similarities with Aptos in how they manage generic tokens, but key differences arise from Sui’s object-centric model and unique programming paradigm. Also in SUI, like native token, generic tokens are menaged with the [coin module](https://docs.sui.io/references/framework/sui/coin).
-
-
-
-
-
-
-Notably, IOTA (due to its receiver-centric design) and SUI (which shares similarities with IOTA in this regard) restrict contract owners from predefining token balances during deployment, requiring such configurations to occur after contract creation. In contrast,Aptos maintains a coherent, streamlined approach by enabling precise token balance allocation directly at deployment time, aligning with its design specifications.
