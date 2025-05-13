@@ -42,4 +42,9 @@ public fun set_balance_and_receiver<T>(receiver: address,wallet: Wallet<IOTA>, c
 }
 ```
 
-explain: TODO
+The set_balance_and_receiver function accepts three inputs:
+1. The recipient’s address
+2. The wallet instance shared in the smart contract
+3. The transaction context
+
+First, it verifies that the `initialized` flag is set to `true` and confirms the transaction sender is the authorized owner of the wallet. If both checks succeed, the function decommissions the original wallet (created during contract deployment) and dynamically generates a replacement wallet. This new wallet retains the original owner but updates the `balance` to reflect the token type specified in the function call, assigns the provided `receiver` address, and resets the `initialized` flag to true. Finally, the system destroys the IOTA token balance and the unique identifier ([UID](https://docs.iota.org/developer/iota-101/objects/uid-id)) of the old wallet and publishes the updated wallet to the contract.
