@@ -75,16 +75,16 @@ The deposit function enables the wallet owner to transfer [IOTA](https://docs.io
 IOTA coins are wrapped in a [Coin](https://docs.iota.org/references/framework/iota-framework/coin#0x2_coin_Coin) type, which acts as a container for balances. To extract the underlying value, the into_balance function from the [coin module](https://docs.iota.org/references/framework/iota-framework/coin) is invoked, converting the Coin into a balance.
 The converted balance (provided by the owner) is then added to the Wallet’s total balance, finalizing the deposit.
 
-### Withdrow
+### withdraw
 
 ```move
-public fun withdrow(amount: u64, wallet: &mut Wallet, ctx: &mut TxContext){
+public fun withdraw(amount: u64, wallet: &mut Wallet, ctx: &mut TxContext){
     assert!(ctx.sender() == wallet.receiver, EPermissionsDenied);
     assert!(amount <= wallet.balance.value(), EBiggerThanBalance);
 
-    let withdrow_balance = wallet.balance.split(amount);
-    let withdrow_coin = coin::from_balance(withdrow_balance, ctx);
-    iota::transfer(withdrow_coin, ctx.sender());
+    let withdraw_balance = wallet.balance.split(amount);
+    let withdraw_coin = coin::from_balance(withdraw_balance, ctx);
+    iota::transfer(withdraw_coin, ctx.sender());
 }
 ```
 
