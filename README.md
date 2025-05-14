@@ -14,14 +14,21 @@ To install IOTA and all necessary dependencies you can see the [IOTA Installatio
 
 ## Usage
 
-To build a specific contract, navigate to the `./contracts/<target-contract>` and run the following command:
+Before running any commands, ensure you're in the target contract's directory:
 
 ```bash
-iota move build
+~/your-path/rsc_iota_imp$ cd contracts/<target-contract>
 ```
 
-To run all tests for a specific contract, navigate to the `./contracts/<target-contract>` directory and run the following command:
+To build the contract run the following command:
 
 ```bash
-iota move test
+
+$ iota move build
+```
+
+To run all tests run the following command:
+
+```bash
+$ iota move test
 ```
