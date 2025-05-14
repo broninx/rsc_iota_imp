@@ -49,13 +49,13 @@ public fun deposit<T>(amount: Coin<T>,wallet:&mut Wallet<T>, ctx: &mut TxContext
     wallet.balance.join(balance_to_deposite);
 }
 
-public fun withdrow<T>(amount: u64, wallet: &mut Wallet<T>, ctx: &mut TxContext){
+public fun withdraw<T>(amount: u64, wallet: &mut Wallet<T>, ctx: &mut TxContext){
     assert!(ctx.sender() == wallet.receiver, EPermissionsDenied);
     assert!(amount <= wallet.balance.value(), EBiggerThanBalance);
 
-    let withdrow_balance = wallet.balance.split(amount);
-    let withdrow_coin = coin::from_balance(withdrow_balance, ctx);
-    transfer::public_transfer(withdrow_coin, wallet.receiver);
+    let withdraw_balance = wallet.balance.split(amount);
+    let withdraw_coin = coin::from_balance(withdraw_balance, ctx);
+    transfer::public_transfer(withdraw_coin, wallet.receiver);
 }
 
 #[test_only]
