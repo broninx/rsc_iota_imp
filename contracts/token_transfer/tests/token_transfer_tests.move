@@ -62,7 +62,7 @@ public fun intended_way() {
         let mut wallet = test_scenario::take_shared<Wallet<MyToken>>(&scenario);
         assert!(token_transfer::wallet_amount(&wallet) == 10000, EWrongAmount);
         let ctx = test_scenario::ctx(&mut scenario);
-        token_transfer::withdrow(1000, &mut wallet, ctx); 
+        token_transfer::withdraw(1000, &mut wallet, ctx); 
         assert!(token_transfer::wallet_amount(&wallet) == 9000, EWrongAmount);
         test_scenario::return_shared(wallet);
     };
@@ -71,7 +71,7 @@ public fun intended_way() {
     {
         let mut wallet = test_scenario::take_shared<Wallet<MyToken>>(&scenario);
         let ctx = test_scenario::ctx(&mut scenario);
-        token_transfer::withdrow(9000, &mut wallet, ctx); 
+        token_transfer::withdraw(9000, &mut wallet, ctx); 
         assert!(token_transfer::wallet_amount(&wallet) == 0, EWrongAmount);
         test_scenario::return_shared(wallet);
     };
@@ -142,7 +142,7 @@ public fun receiver_cant_deposit() {
 }
 
 #[test, expected_failure(abort_code = token_transfer::EPermissionsDenied)]
-public fun only_receiver_withdrow() {
+public fun only_receiver_withdraw() {
     
     let mut scenario = test_scenario::begin(OWNER);
     transaction1(&mut scenario);
@@ -166,7 +166,7 @@ public fun only_receiver_withdrow() {
     {
         let mut wallet = test_scenario::take_shared<Wallet<MyToken>>(&scenario);
         let ctx = test_scenario::ctx(&mut scenario);
-        token_transfer::withdrow(1000, &mut wallet, ctx); 
+        token_transfer::withdraw(1000, &mut wallet, ctx); 
         test_scenario::return_shared(wallet);
     };
 
@@ -198,7 +198,7 @@ public fun withdorw_amount_bigger_than_balance() {
         let mut wallet = test_scenario::take_shared<Wallet<MyToken>>(&scenario);
         assert!(token_transfer::wallet_amount(&wallet) == 10000, EWrongAmount);
         let ctx = test_scenario::ctx(&mut scenario);
-        token_transfer::withdrow(10001, &mut wallet, ctx); 
+        token_transfer::withdraw(10001, &mut wallet, ctx); 
         test_scenario::return_shared(wallet);
     };
 
