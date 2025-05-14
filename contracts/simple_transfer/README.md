@@ -9,7 +9,7 @@ At contract creation, the owner specifies the receiver's address.
 
 After contract creation, the contract supports two actions:
 - **deposit** allows the owner to deposit an arbitrary amount of native cryptocurrency in the contract;
-- **withdraw** allows the receiver to withdraw any amount of the cryptocurrency deposited in the contract.
+- **withdraw** allows the receiver to withdraw any amount of the cryptocurrency depositd in the contract.
 
 ## Required functionalities
 
@@ -59,14 +59,14 @@ If both conditions are satisfied, the function:
 
 Once executed, the `initialized` flag permanently blocks re-invocation of `set_receiver`, preventing unauthorized or duplicate modifications to the receiver address.
 
-### Deposite
+### Deposit
 
 ```move
 public fun deposit(amount: Coin<IOTA>,wallet:&mut Wallet, ctx: &mut TxContext){
     assert!(ctx.sender() == wallet.owner, EPermissionsDenied);
     
-    let balance_to_deposite = coin::into_balance<IOTA>(amount);
-    wallet.balance.join(balance_to_deposite);
+    let balance_to_deposit = coin::into_balance<IOTA>(amount);
+    wallet.balance.join(balance_to_deposit);
 }
 ```
 
@@ -75,7 +75,7 @@ The deposit function enables the wallet owner to transfer [IOTA](https://docs.io
 IOTA coins are wrapped in a [Coin](https://docs.iota.org/references/framework/iota-framework/coin#0x2_coin_Coin) type, which acts as a container for balances. To extract the underlying value, the into_balance function from the [coin module](https://docs.iota.org/references/framework/iota-framework/coin) is invoked, converting the Coin into a balance.
 The converted balance (provided by the owner) is then added to the Wallet’s total balance, finalizing the deposit.
 
-### withdraw
+### Withdraw
 
 ```move
 public fun withdraw(amount: u64, wallet: &mut Wallet, ctx: &mut TxContext){
