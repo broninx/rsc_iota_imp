@@ -17,7 +17,7 @@ To install IOTA and all necessary dependencies you can see the [IOTA Installatio
 Before running any commands, ensure you're in the target contract's directory:
 
 ```bash
-~/<path>/rsc_iota_imp$ cd contracts/<target-contract>
+$ cd ~/<path>/rsc_iota_imp/contracts/<target-contract>
 ```
 
 To build the contract run the following command:
