@@ -20,3 +20,47 @@ After contract creation, the contract supports two actions:
 - Time constraints
 - Transaction revert
 - Hash on arbitrary messages
+
+## Implementation
+
+### Initialization
+
+After deploying the contract, the owner must call the initialize function to configure the contract with all required parameters.
+
+```move
+public fun initialize(
+    receiver: address,
+    hash: vector<u8>, 
+    timeout: u64, 
+    coin: Coin<IOTA>,
+    htlc: Htlc,
+    clock: &Clock, 
+    ctx: &mut TxContext){
+    assert!(ctx.sender() == htlc.owner, EPermissionDenied);
+    assert!(!htlc.initialized, EJustInitialized);
+
+    let Htlc {
+        id: id, 
+        owner: owner,
+        receiver: _,
+        hash: _,
+        reveal_timeout: _,
+        coin: mut htlc_coin,
+        initialized: _
+    } = htlc;
+
+    let htlc_coin.join(coin);
+    let htlc = Htlc {
+        id: object::new(ctx),
+        owner: owner,
+        receiver: receiver,
+        hash: hash,
+        reveal_timeout: clock::timestamp_ms(clock) + timeout,
+        coin: htlc_coin,
+        initialized: true
+    };
+    object::delete(id);
+    transfer::share_object(htlc);
+}
+```
+
