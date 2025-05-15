@@ -40,7 +40,7 @@ module bet::bet;
     oracle: &Oracle,
     ctx: &mut TxContext
     ){
-      let bet = Bet<T>{
+        let bet = Bet<T>{
           id: object::new(ctx),
           amount: wager,
           player1: p1,
