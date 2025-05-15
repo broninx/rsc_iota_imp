@@ -64,3 +64,30 @@ public fun initialize(
 }
 ```
 
+The owner must provide the following parameters during initialization via the `initialize` function:
+- **Receiver Address**: Designated to receive funds in the event of a timeout.
+- **Native Cryptocurrency Amount**: The locked value (e.g., in IOTA).
+- **Timeout Duration**: A predefined period (in milliseconds) before the contract expires.
+
+The function automatically captures the current timestamp (in ms) as a clock parameter, which is combined with the `reveal_timeout` to calculate the deadline (`reveal_time` + `timeout`).
+
+### Reveal
+
+```move
+public fun reveal(secret: vector<u8>, htlc: Htlc, ctx: &mut TxContext){
+    assert!(ctx.sender() == htlc.owner, EPermissionDenied);
+    assert!(hash::keccak256(&htlc.hash) == hash::keccak256(&secret), EWrongSecret);
+
+    let Htlc {
+        id: id,
+        owner: owner,
+        receiver: _,
+        hash: _,
+        reveal_timeout: _,
+        coin: coin,
+        initialized: _
+    } = htlc;
+    object::delete(id);
+    iota::transfer(coin, owner);
+}
+```
