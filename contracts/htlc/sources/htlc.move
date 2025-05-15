@@ -12,22 +12,22 @@ const ETimeNotFinished: u64 = 3;
 
 public struct Htlc has key {
     id: UID,
-    owner: address,
+    committer: address,
     receiver: address,
     hash: vector<u8>,
-    reveal_timeout: u64,
-    coin: Coin<IOTA>,
+    deadline: u64,
+    amount: Coin<IOTA>,
     initialized: bool
 }
 
 fun init(ctx: &mut TxContext){
     let htlc = Htlc {
         id: object::new(ctx),
-        owner: ctx.sender(),
+        committer: ctx.sender(),
         receiver: ctx.sender(),
         hash: b"temp",
-        reveal_timeout: 0,
-        coin: coin::zero<IOTA>(ctx),
+        deadline: 0,
+        amount: coin::zero<IOTA>(ctx),
         initialized: false
     };
     transfer::share_object(htlc);
@@ -35,33 +35,33 @@ fun init(ctx: &mut TxContext){
 
 public fun initialize(
     receiver: address,
-    hash: vector<u8>, 
+    preimage: vector<u8>, 
     timeout: u64, 
     coin: Coin<IOTA>,
     htlc: Htlc,
     clock: &Clock, 
     ctx: &mut TxContext){
-    assert!(ctx.sender() == htlc.owner, EPermissionDenied);
+    assert!(ctx.sender() == htlc.committer, EPermissionDenied);
     assert!(!htlc.initialized, EJustInitialized);
 
     let Htlc {
         id: id, 
-        owner: owner,
+        committer: committer,
         receiver: _,
         hash: _,
-        reveal_timeout: _,
-        coin: mut htlc_coin,
+        deadline: _,
+        amount: mut htlc_coin,
         initialized: _
     } = htlc;
 
     htlc_coin.join(coin);
     let htlc = Htlc {
         id: object::new(ctx),
-        owner: owner,
+        committer: committer,
         receiver: receiver,
-        hash: hash,
-        reveal_timeout: clock::timestamp_ms(clock) + timeout,
-        coin: htlc_coin,
+        hash: hash::keccak256(&preimage),
+        deadline: clock::timestamp_ms(clock) + timeout,
+        amount: htlc_coin,
         initialized: true
     };
     object::delete(id);
@@ -69,31 +69,31 @@ public fun initialize(
 }
 
 public fun reveal(secret: vector<u8>, htlc: Htlc, ctx: &mut TxContext){
-    assert!(ctx.sender() == htlc.owner, EPermissionDenied);
-    assert!(hash::keccak256(&htlc.hash) == hash::keccak256(&secret), EWrongSecret);
+    assert!(ctx.sender() == htlc.committer, EPermissionDenied);
+    assert!(htlc.hash == hash::keccak256(&secret), EWrongSecret);
 
     let Htlc {
         id: id,
-        owner: owner,
+        committer: committer,
         receiver: _,
         hash: _,
-        reveal_timeout: _,
-        coin: coin,
+        deadline: _,
+        amount: coin,
         initialized: _
     } = htlc;
     object::delete(id);
-    iota::transfer(coin, owner);
+    iota::transfer(coin, committer);
 }
 
 public fun timeout(clock: &Clock, htlc: Htlc){
-    assert!(clock::timestamp_ms(clock) > htlc.reveal_timeout, ETimeNotFinished);
+    assert!(clock::timestamp_ms(clock) > htlc.deadline, ETimeNotFinished);
     let Htlc {
         id: id,
-        owner: _,
+        committer: _,
         receiver: receiver,
         hash: _,
-        reveal_timeout: _,
-        coin: coin,
+        deadline: _,
+        amount: coin,
         initialized: _
     } = htlc;
 
@@ -106,16 +106,16 @@ public fun timeout(clock: &Clock, htlc: Htlc){
 public fun init_test(ctx: &mut TxContext){
     let htlc = Htlc {
         id: object::new(ctx),
-        owner: ctx.sender(),
+        committer: ctx.sender(),
         receiver: ctx.sender(),
         hash: b"temp",
-        reveal_timeout: 0,
-        coin: coin::zero<IOTA>(ctx),
+        deadline: 0,
+        amount: coin::zero<IOTA>(ctx),
         initialized: false
     };
     transfer::share_object(htlc);
 }
 
-public fun reveal_timeout(self: &Htlc): u64{
-    self.reveal_timeout
+public fun deadline(self: &Htlc): u64{
+    self.deadline
 }

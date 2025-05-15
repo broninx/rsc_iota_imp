@@ -77,7 +77,7 @@ fun intended_way_timeout() {
         let htlc = test_scenario::take_shared<Htlc>(&scenario);
         let ctx = test_scenario::ctx(&mut scenario);
         let mut clock = clock::create_for_testing(ctx);
-        clock.increment_for_testing(htlc.reveal_timeout() + 1);
+        clock.increment_for_testing(htlc.deadline() + 1);
         htlc::timeout(&clock, htlc);
         assert!(!test_scenario::has_most_recent_shared<Htlc>(), EEmptyInventory);
         clock::destroy_for_testing(clock);
@@ -121,16 +121,11 @@ fun time_not_finished(){
         let htlc = test_scenario::take_shared<Htlc>(&scenario);
         let ctx = test_scenario::ctx(&mut scenario);
         let mut clock = clock::create_for_testing(ctx);
-        clock.increment_for_testing(htlc.reveal_timeout() - 1);
+        clock.increment_for_testing(htlc.deadline() - 1);
         htlc::timeout(&clock, htlc);
         assert!(!test_scenario::has_most_recent_shared<Htlc>(), EEmptyInventory);
         clock::destroy_for_testing(clock);
     };
     test_scenario::end(scenario);
 }
-    // #[test, expected_failure(abort_code = ::htlc::htlc_tests::ENotImplemented)]
-    // fun test_htlc_fail() {
-    //     abort ENotImplemented
-    // }
-
-
+   
