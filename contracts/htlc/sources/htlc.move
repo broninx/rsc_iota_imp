@@ -50,14 +50,11 @@ public fun initialize(
         receiver: _,
         hash: _,
         reveal_timeout: _,
-        coin: htlc_coin,
+        coin: mut htlc_coin,
         initialized: _
     } = htlc;
 
-    let mut htlc_balance = coin::into_balance(htlc_coin);
-    let balance = coin::into_balance(coin);
-    htlc_balance.join(balance);
-    let htlc_coin = coin::from_balance(htlc_balance, ctx);
+    htlc_coin.join(coin);
     let htlc = Htlc {
         id: object::new(ctx),
         owner: owner,
