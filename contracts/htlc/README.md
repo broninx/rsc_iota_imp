@@ -30,33 +30,33 @@ After deploying the contract, the owner must call the initialize function to con
 ```move
 public fun initialize(
     receiver: address,
-    hash: vector<u8>, 
+    preimage: vector<u8>, 
     timeout: u64, 
     coin: Coin<IOTA>,
     htlc: Htlc,
     clock: &Clock, 
     ctx: &mut TxContext){
-    assert!(ctx.sender() == htlc.owner, EPermissionDenied);
+    assert!(ctx.sender() == htlc.committer, EPermissionDenied);
     assert!(!htlc.initialized, EJustInitialized);
 
     let Htlc {
         id: id, 
-        owner: owner,
+        committer: committer,
         receiver: _,
         hash: _,
-        reveal_timeout: _,
-        coin: mut htlc_coin,
+        deadline: _,
+        amount: mut htlc_coin,
         initialized: _
     } = htlc;
 
-    let htlc_coin.join(coin);
+    htlc_coin.join(coin);
     let htlc = Htlc {
         id: object::new(ctx),
-        owner: owner,
+        committer: committer,
         receiver: receiver,
-        hash: hash,
-        reveal_timeout: clock::timestamp_ms(clock) + timeout,
-        coin: htlc_coin,
+        hash: hash::keccak256(&preimage),
+        deadline: clock::timestamp_ms(clock) + timeout,
+        amount: htlc_coin,
         initialized: true
     };
     object::delete(id);
@@ -64,30 +64,57 @@ public fun initialize(
 }
 ```
 
-The owner must provide the following parameters during initialization via the `initialize` function:
+The committer must provide the following parameters during initialization via the `initialize` function:
 - **Receiver Address**: Designated to receive funds in the event of a timeout.
 - **Native Cryptocurrency Amount**: The locked value (e.g., in IOTA).
 - **Timeout Duration**: A predefined period (in milliseconds) before the contract expires.
 
-The function automatically captures the current timestamp (in ms) as a clock parameter, which is combined with the `reveal_timeout` to calculate the deadline (`reveal_time` + `timeout`).
+The function automatically captures the current timestamp (in ms) as a clock parameter, which is combined with the `deadline` to calculate the deadline.
 
 ### Reveal
 
+The reveal function requires three inputs: a secret, a string value (in Move, strings are represented as vector<u8>); Htcl, a struct containing the contract’s state data (receiver, amount, deadline, ecc...); ctx, the trasaction context.
+
 ```move
 public fun reveal(secret: vector<u8>, htlc: Htlc, ctx: &mut TxContext){
-    assert!(ctx.sender() == htlc.owner, EPermissionDenied);
-    assert!(hash::keccak256(&htlc.hash) == hash::keccak256(&secret), EWrongSecret);
+    assert!(ctx.sender() == htlc.committer, EPermissionDenied);
+    assert!(htlc.hash == hash::keccak256(&secret), EWrongSecret);
 
     let Htlc {
         id: id,
-        owner: owner,
+        committer: committer,
         receiver: _,
         hash: _,
-        reveal_timeout: _,
-        coin: coin,
+        deadline: _,
+        amount: coin,
         initialized: _
     } = htlc;
     object::delete(id);
-    iota::transfer(coin, owner);
+    iota::transfer(coin, committer);
+}
+```
+
+During the `reveal` function’s execution, the system first validates whether the Keccak-256 hash of the provided `secret` matches the pre-stored `hash` within the Htcl struct. If verified, the committer redeems the locked collateral, and the Htcl struct is permanently removed from storage, terminating the contract’s lifecycle.
+
+### Timeout
+
+The `timeout` function validates whether the current timestamp exceeds the predefined deadline. If true, it deallocates the Htcl struct and transfers the entire locked `amount` to the designated `receiver`, terminating the contract's lifecycle.
+
+```move
+public fun timeout(clock: &Clock, htlc: Htlc){
+    assert!(clock::timestamp_ms(clock) > htlc.deadline, ETimeNotFinished);
+    let Htlc {
+        id: id,
+        committer: _,
+        receiver: receiver,
+        hash: _,
+        deadline: _,
+        amount: coin,
+        initialized: _
+    } = htlc;
+
+    object::delete(id);
+    iota::transfer(coin, receiver);
+
 }
 ```
