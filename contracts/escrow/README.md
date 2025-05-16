@@ -88,3 +88,6 @@ public fun refund(escrow: Escrow, ctx: &mut TxContext){
 }
 ```
 
+## Implementation differences
+
+The Escrow implementation retains the same discrepancies identified in the previous implementations.
