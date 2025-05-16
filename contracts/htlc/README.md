@@ -121,4 +121,4 @@ public fun timeout(clock: &Clock, htlc: Htlc){
 
 ## Implementation differences
 
-The HTCL implementation retains the same discrepancies identified in the previous implementations.
+The HTCL implementation retains the same discrepancies with other diales identified in the previous implementations.
