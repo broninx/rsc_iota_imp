@@ -121,4 +121,4 @@ public fun timeout(clock: &Clock, htlc: Htlc){
 
 ## Implementation differences
 
-While prior contract implementations emphasized distinct variations, the current Htcl implementation adheres to established patterns without introducing material deviations in its core logic or structure.
+The HTCL implementation retains the same discrepancies identified in the previous implementations.
