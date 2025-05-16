@@ -7,7 +7,7 @@ A set of use cases with tests taken from [rosetta-smart-contracts](https://githu
 1. [Bet](contracts/bet)
 2. [Simple transfer](contracts/simple_transfer)
 3. [Token transfer](contracts/token_transfer)
-4. [Htlc](contracts/htlc)
+4. [HTLC](contracts/htlc)
 5. [Escrow](contracts/escrow)
 
 ## Installation
