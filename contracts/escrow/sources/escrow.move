@@ -9,8 +9,9 @@ use iota::coin::{Self, Coin};
 const EPermissionDenied: u64 = 0;
 const EWrongAmount: u64 = 1;
 
-const IDLE: u8 = 0;
-const ACTIVE: u8 = 1;
+const INIT: u8 = 0;
+const IDLE: u8 = 1;
+const ACTIVE: u8 = 2;
 
 public struct Escrow has key {
     id: UID,
@@ -28,14 +29,17 @@ fun init(ctx: &mut TxContext){
         seller: ctx.sender(),
         amount_required: 0,
         amount: balance::zero<IOTA>(),
-        state: IDLE
+        state: INIT
     };
     transfer::share_object(escrow);
 }
 
-public fun initialize (buyer: address, amount_required: u64, escrow: &mut Escrow){
+public fun initialize (buyer: address, amount_required: u64, escrow: &mut Escrow, ctx: &mut TxContext){
+    assert!(escrow.seller == ctx.sender(), EPermissionDenied);
+    assert!(escrow.state == INIT, EPermissionDenied);
     escrow.buyer = buyer;
     escrow.amount_required = amount_required;
+    escrow.state = IDLE;
 }
 
 public fun deposit(amount: Coin<IOTA>, escrow: &mut Escrow, ctx: &mut TxContext){
@@ -49,6 +53,8 @@ public fun deposit(amount: Coin<IOTA>, escrow: &mut Escrow, ctx: &mut TxContext)
 }
 
 fun send_balance(recipient: address, escrow: Escrow, ctx: &mut TxContext){
+    assert!(escrow.state == ACTIVE, EPermissionDenied);
+
     let Escrow {id: id, buyer: _, seller: _, amount_required: _, amount: balance, state: _} = escrow;
     let coin = coin::from_balance(balance, ctx);
     transfer::public_transfer(coin, recipient);   
@@ -57,14 +63,26 @@ fun send_balance(recipient: address, escrow: Escrow, ctx: &mut TxContext){
 
 public fun pay(escrow: Escrow, ctx: &mut TxContext){
     assert!(escrow.buyer == ctx.sender(), EPermissionDenied);
-    assert!(escrow.state == ACTIVE, EPermissionDenied);
 
     send_balance(escrow.seller, escrow, ctx);
 }
 
 public fun refund(escrow: Escrow, ctx: &mut TxContext){
     assert!(escrow.seller == ctx.sender(), EPermissionDenied);
-    assert!(escrow.state == ACTIVE, EPermissionDenied);
 
     send_balance(escrow.buyer, escrow, ctx);
+}
+
+#[test_only]
+
+public fun init_test(ctx: &mut TxContext){
+    let escrow = Escrow {
+        id: object::new(ctx),
+        buyer: ctx.sender(),
+        seller: ctx.sender(),
+        amount_required: 0,
+        amount: balance::zero<IOTA>(),
+        state: INIT
+    };
+    transfer::share_object(escrow);
 }
