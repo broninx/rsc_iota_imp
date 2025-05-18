@@ -87,3 +87,4 @@ When the auction concludes, the on-chain auction instance is decommissioned. The
 
 ## Implementation differences
 
+The Auction implementation retains the same discrepancies with other diales identified in the previous implementations.
