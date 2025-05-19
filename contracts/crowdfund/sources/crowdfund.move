@@ -8,7 +8,6 @@ use iota::coin::Coin;
 const EPermissionDenied: u64 = 0;
 const EJustInit: u64 = 1;
 const ETimeFinished: u64 = 2;
-const EGoalJustArrived: u64 = 3;
 const ETimeNotFinished: u64 = 4;
 const EGoalNotAchived: u64 = 5;
 const ENotInitialized: u64 = 6;
@@ -70,24 +69,14 @@ public fun initialize(recipient: address, goal: u64, deadline: u64,crowdfund: &m
     crowdfund.initialized = true;
 }
 
-public fun donate(mut donation: Coin<IOTA>, crowdfund: &mut Crowdfund, clock: &Clock, ctx: &mut TxContext){
+public fun donate(donation: Coin<IOTA>, crowdfund: &mut Crowdfund, clock: &Clock, ctx: &mut TxContext){
     assert!(clock.timestamp_ms() <= crowdfund.deadline, ETimeFinished);
     assert!(crowdfund.initialized, ENotInitialized);
 
-    if (crowdfund.amount >= crowdfund.goal){
-        abort EGoalJustArrived
-    } else if (crowdfund.amount + donation.value() > crowdfund.goal) {
-        let value_goal = crowdfund.goal - crowdfund.amount;
-        let value_left = donation.value() - value_goal;
-        let coin = donation.split(value_left, ctx);
-        iota::transfer(coin, ctx.sender());
-    };
-
     crowdfund.amount = crowdfund.amount + donation.value();
     if (crowdfund.donors.contains(&ctx.sender())){
-        let (donor,mut donation_just_sended) = crowdfund.donors.remove(&ctx.sender());
+        let donation_just_sended = crowdfund.donors.get_mut(&ctx.sender());
         donation_just_sended.join(donation);
-        crowdfund.donors.insert(donor, donation_just_sended);
     } else {
         crowdfund.donors.insert(ctx.sender(), donation);
     };
@@ -96,7 +85,7 @@ public fun donate(mut donation: Coin<IOTA>, crowdfund: &mut Crowdfund, clock: &C
 public fun withdraw(mut crowdfund: Crowdfund, clock: &Clock, ctx: &mut TxContext){
     assert!(crowdfund.recipient == ctx.sender(), EPermissionDenied);
     assert!(clock.timestamp_ms() >= crowdfund.deadline, ETimeNotFinished);
-    assert!(crowdfund.amount == crowdfund.goal, EGoalNotAchived);
+    assert!(crowdfund.amount >= crowdfund.goal, EGoalNotAchived);
 
     while (!crowdfund.donors.is_empty()) {
         let (_, donation) = crowdfund.donors.pop();
