@@ -45,17 +45,19 @@ fun donate_test(value: u64, sender: address, clock: &Clock, mut scenario: Scenar
 
 fun withdraw_test(sender: address, clock: &Clock, mut scenario: Scenario): Scenario {
     test_scenario::next_tx(&mut scenario, sender);
-    let crowdfund = test_scenario::take_shared<Crowdfund>(&scenario);
+    let mut crowdfund = test_scenario::take_shared<Crowdfund>(&scenario);
     let ctx = test_scenario::ctx(&mut scenario);
-    crowdfund::withdraw(crowdfund, clock, ctx);
+    crowdfund::withdraw(&mut crowdfund, clock, ctx);
+    test_scenario::return_shared(crowdfund);
     scenario
 }
 
 fun reclaim_test(sender: address, clock: &Clock, mut scenario: Scenario): Scenario {
     test_scenario::next_tx(&mut scenario, sender);
-    let crowdfund = test_scenario::take_shared<Crowdfund>(&scenario);
+    let mut crowdfund = test_scenario::take_shared<Crowdfund>(&scenario);
     let ctx = test_scenario::ctx(&mut scenario);
-    crowdfund::reclaim(crowdfund, clock, ctx);
+    crowdfund::reclaim(&mut crowdfund, clock, ctx);
+    test_scenario::return_shared(crowdfund);
     scenario
 }
 
