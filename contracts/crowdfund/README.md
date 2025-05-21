@@ -24,3 +24,25 @@ donors can withdraw the amounts they have donated.
 - Time constraints
 - Transaction revert
 - Key-value maps
+
+## Implementation
+
+### Donate
+
+```move
+public fun donate(donation: Coin<IOTA>, crowdfund: &mut Crowdfund, clock: &Clock, ctx: &mut TxContext){
+    assert!(clock.timestamp_ms() <= crowdfund.deadline, ETimeFinished);
+    assert!(crowdfund.initialized, ENotInitialized);
+
+    crowdfund.amount = crowdfund.amount + donation.value();
+    if (crowdfund.donors.contains(&ctx.sender())){
+        let donation_just_sended = crowdfund.donors.get_mut(&ctx.sender());
+        donation_just_sended.join(donation);
+    } else {
+        crowdfund.donors.insert(ctx.sender(), donation);
+    };
+}
+```
+
+The Crowdfund struct uses a [map](https://docs.iota.org/references/framework/testnet/iota-framework/vec_map) to track donations, where each donor serves as a key and their cumulative donation total acts as the corresponding value. When a donor makes multiple contributions, the amounts are automatically aggregated into their existing total within the map.
+
