@@ -25,6 +25,20 @@ public struct Crowdfund has key {
     initialized: bool
 }
 
+public fun destroy(self: Crowdfund){
+    let Crowdfund {
+        id: id,
+        admin: _,
+        recipient: _,
+        donors: donors,
+        goal: _,
+        amount: _,
+        deadline: _,
+        initialized:_ 
+    } = self;
+    object::delete(id);
+    donors.destroy_empty();
+}
 fun init(ctx: &mut TxContext){
     let donors = vec_map::empty<address, Coin<IOTA>>();
     let crowdfund = Crowdfund {
@@ -65,7 +79,7 @@ public fun donate(donation: Coin<IOTA>, crowdfund: &mut Crowdfund, clock: &Clock
     };
 }
 
-public fun withdraw(crowdfund: &mut Crowdfund, clock: &Clock, ctx: &mut TxContext){
+public fun withdraw(mut crowdfund: Crowdfund, clock: &Clock, ctx: &mut TxContext){
     assert!(crowdfund.recipient == ctx.sender(), EPermissionDenied);
     assert!(clock.timestamp_ms() >= crowdfund.deadline, ETimeNotFinished);
     assert!(crowdfund.amount >= crowdfund.goal, EGoalNotAchived);
@@ -74,10 +88,11 @@ public fun withdraw(crowdfund: &mut Crowdfund, clock: &Clock, ctx: &mut TxContex
         let (_, donation) = crowdfund.donors.pop();
         iota::transfer(donation, crowdfund.recipient);
     };
-    crowdfund.initialized = false;
+    crowdfund.destroy();
 }
 
-public fun reclaim(crowdfund: &mut Crowdfund, clock: &Clock, ctx: &mut TxContext){
+
+public fun reclaim(mut crowdfund: Crowdfund, clock: &Clock, ctx: &mut TxContext){
     assert!(clock.timestamp_ms() >= crowdfund.deadline, ETimeNotFinished);
     assert!(crowdfund.amount < crowdfund.goal, EGoalAchived);
     assert!(crowdfund.donors.contains(&ctx.sender()), ENotDonor);
@@ -85,7 +100,9 @@ public fun reclaim(crowdfund: &mut Crowdfund, clock: &Clock, ctx: &mut TxContext
     let (donor, donation) = crowdfund.donors.remove(&ctx.sender());
     iota::transfer(donation, donor);
     if (crowdfund.donors.is_empty()){
-        crowdfund.initialized = false;
+        crowdfund.destroy();
+    } else {
+        transfer::share_object(crowdfund);
     }
 }
 
