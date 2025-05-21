@@ -3,7 +3,7 @@ module crowdfund::crowdfund;
 use iota::iota::{Self, IOTA};
 use iota::clock::Clock;
 use iota::vec_map::{Self, VecMap};
-use iota::coin::Coin;
+use iota::coin::{Self, Coin};
 
 const EPermissionDenied: u64 = 0;
 const EJustInit: u64 = 1;
@@ -84,10 +84,12 @@ public fun withdraw(mut crowdfund: Crowdfund, clock: &Clock, ctx: &mut TxContext
     assert!(clock.timestamp_ms() >= crowdfund.deadline, ETimeNotFinished);
     assert!(crowdfund.amount >= crowdfund.goal, EGoalNotAchived);
 
+    let mut donations = coin::zero<IOTA>(ctx);
     while (!crowdfund.donors.is_empty()) {
         let (_, donation) = crowdfund.donors.pop();
-        iota::transfer(donation, crowdfund.recipient);
+        donations.join(donation);
     };
+    iota::transfer(donations, crowdfund.recipient);
     crowdfund.destroy();
 }
 
