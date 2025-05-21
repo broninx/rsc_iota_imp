@@ -19,8 +19,8 @@ public struct Crowdfund has key {
     admin: address,
     recipient: address,
     donors: VecMap<address, Coin<IOTA>>,
-    goal: u64, // in IOTA coin
-    amount: u64, // in IOTA coin
+    goal: u64, // of IOTA coin
+    amount: u64, // of IOTA coin
     deadline: u64, // in ms
     initialized: bool
 }
