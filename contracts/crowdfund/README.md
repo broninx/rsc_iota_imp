@@ -46,3 +46,47 @@ public fun donate(donation: Coin<IOTA>, crowdfund: &mut Crowdfund, clock: &Clock
 
 The Crowdfund struct uses a [map](https://docs.iota.org/references/framework/testnet/iota-framework/vec_map) to track donations, where each donor serves as a key and their cumulative donation total acts as the corresponding value. When a donor makes multiple contributions, the amounts are automatically aggregated into their existing total within the map.
 
+### Withdraw
+
+```move
+public fun withdraw(mut crowdfund: Crowdfund, clock: &Clock, ctx: &mut TxContext){
+    assert!(crowdfund.recipient == ctx.sender(), EPermissionDenied);
+    assert!(clock.timestamp_ms() >= crowdfund.deadline, ETimeNotFinished);
+    assert!(crowdfund.amount >= crowdfund.goal, EGoalNotAchived);
+
+    let mut donations = coin::zero<IOTA>(ctx);
+    while (!crowdfund.donors.is_empty()) {
+        let (_, donation) = crowdfund.donors.pop();
+        donations.join(donation);
+    };
+    iota::transfer(donation, crowdfund.recipient);
+    crowdfund.destroy();
+}
+```
+
+Once the donation period ends and the funding goal is met, the beneficiary can claim the total raised funds. This is achieved by summing all contributions from the hash map and transferring the aggregated amount to the beneficiary's address.
+
+### Reclaim
+
+```move
+public fun reclaim(mut crowdfund: Crowdfund, clock: &Clock, ctx: &mut TxContext){
+    assert!(clock.timestamp_ms() >= crowdfund.deadline, ETimeNotFinished);
+    assert!(crowdfund.amount < crowdfund.goal, EGoalAchived);
+    assert!(crowdfund.donors.contains(&ctx.sender()), ENotDonor);
+
+    let (donor, donation) = crowdfund.donors.remove(&ctx.sender());
+    iota::transfer(donation, donor);
+    if (crowdfund.donors.is_empty()){
+        crowdfund.destroy();
+    } else {
+        transfer::share_object(crowdfund);
+    }
+}
+```
+
+If the funding `goal` is not met by the campaign `deadline`, donors may manually invoke the `reclaim` function. The contract checks if the caller exists in the hash map: if present, their pledged amount is transferred back and their [entry](https://docs.iota.org/references/framework/testnet/iota-framework/vec_map#0x2_vec_map_Entry) is removed. If the donor has no pledged amount (or already reclaimed), an assertion fails, reverting the transaction. Once all donors have reclaimed their funds and the hash map is empty, the Crowdfund contract self-destructs.
+
+
+### Implemetation differences
+
+TODO
