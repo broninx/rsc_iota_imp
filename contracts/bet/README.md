@@ -23,9 +23,7 @@ After creation, the following actions are possible:
 
 ### Introduction to IOTA
 
-IOTA is a distributed ledger launched in 2016, it evolved from basic value transfers to supporting Turing-complete smart contracts.
-
-In IOTA, every address can hold balances of the native IOTA token (MIOTA) and custom digital assets.
+In IOTA, every address can hold balances of the native IOTA token (IOTA) and custom digital assets.
 
 In IOTA, a foundational transaction type is the [user transaction](https://docs.iota.org/developer/iota-101/transactions/), which enables users to interact with smart contract and transfer assets, specially allow to send IOTA tokens (such as IOTA or MIOTA) between addresses. Each transaction specifies the sender’s address, the receiver’s address, and the amount of tokens being sent.Beyond basic value transfers, IOTA supports custom token transfers through its native tokenization framework.These transactions function allow users to create and send [custom assets](vhttps://docs.iota.org/developer/iota-101/create-coin/).
 
@@ -49,14 +47,21 @@ In Move, the [init](https://docs.iota.org/developer/iota-101/move-overview/init)
 fun init (ctx: &mut TxContext){
       let oracle = Oracle {
         id: object::new(ctx),
-        addr: tx_context::sender(ctx),
-        deadline: 600000 // 10 min
+        addr: ctx.sender(),
+        deadline: 0
       };
       transfer::share_object(oracle);
   }
 ```
 The function instantiates an oracle, which is subsequently shared across the chain via the [share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function and get accessible the oracle instance for reads and writes by any transaction.
 
+To set the deadline the Oracle can use the `initialize` function: 
+ ```move
+ public fun initialize(deadline: u64, oracle: &mut Oracle, ctx: &mut TxContext){
+    assert!(ctx.sender() == oracle.addr, EPermissionDenied);
+    oracle.deadline = deadline;
+  }
+```
 #### Join
 
 The `Join` function enables the participation of two users in a mutually agreed wager.
@@ -70,7 +75,8 @@ public fun join<T> (
     oracle: &Oracle,
     ctx: &mut TxContext
     ){
-      let bet = Bet<T>{
+        let wager = coin::into_balance(wager);
+        let bet = Bet<T>{
           id: object::new(ctx),
           amount: wager,
           player1: p1,
@@ -102,9 +108,11 @@ public fun win<T> (bet: Bet<T>, winner: address, clock: &Clock, ctx: &mut TxCont
     assert!(bet.oracle == ctx.sender(), EPermissionDenied);
 
     let Bet {id: id,amount: wager, player1: _, player2: _,oracle: _, timeout: _} = bet;
+    let wager = coin::from_balance(wager, ctx);
     transfer::public_transfer(wager, winner);
+
     object::delete(id);
-    }
+  }
 ```
 To call the `win` function we require four parameters to be passed to the contract:
 
@@ -124,16 +132,16 @@ Upon successful validation of all assertions, the function initiates the bet res
 #### Timeout
 
 ```move
-public fun timeout<T> (bet: Bet<T>, clock: &Clock, ctx: &mut TxContext){
+  public fun timeout<T> (bet: Bet<T>, clock: &Clock, ctx: &mut TxContext){
     assert!(clock.timestamp_ms() > bet.timeout, ETimeIsNotFinish);
-    let Bet {id: id,amount: wager, player1: p1, player2: p2,oracle: _, timeout: _} = bet;
+    let Bet {id: id, amount:mut wager, player1: p1, player2: p2,oracle: _, timeout: _} = bet;
     object::delete(id);
     let amount = wager.value();
-    let mut wager = wager;
 
-    let wager1 = wager.split(amount / 2, ctx);
-    transfer::public_transfer(wager, p1);
-    transfer::public_transfer(wager1, p2);
+    let wager1 = wager.split(amount /2);
+    
+    transfer::public_transfer(coin::from_balance(wager, ctx), p1);
+    transfer::public_transfer(coin::from_balance(wager1, ctx), p2);
   }
 ```
 The timeout function is publicly accessible, meaning anyone can trigger it. When called, it first checks —via an initial `assert` statement— whether the predefined time limit has expired. Only if this condition is confirmed will the function execute, redistributing all funds exclusively back to the original parties.
