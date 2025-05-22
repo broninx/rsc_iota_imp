@@ -87,6 +87,17 @@ public fun reclaim(mut crowdfund: Crowdfund, clock: &Clock, ctx: &mut TxContext)
 If the funding `goal` is not met by the campaign `deadline`, donors may manually invoke the `reclaim` function. The contract checks if the caller exists in the hash map: if present, their pledged amount is transferred back and their [entry](https://docs.iota.org/references/framework/testnet/iota-framework/vec_map#0x2_vec_map_Entry) is removed. If the donor has no pledged amount (or already reclaimed), an assertion fails, reverting the transaction. Once all donors have reclaimed their funds and the hash map is empty, the Crowdfund contract self-destructs.
 
 
-### Implemetation differences
+## Differences
 
-TODO
+### Dialect differeces
+
+The Crowdfund implementation retains the same discrepancies with other diales identified in the previous implementations.
+
+### Implementation differences
+
+#### Sui/Aptos Implementation (Receipt-Based):
+When a donor contributes, the contract issues them a self-custodied receipt (an on-chain asset). If the campaign fails to meet its goal by the deadline, donors must explicitly call the reclaim function and submit this receipt as proof of contribution. The contract validates the receipt’s authenticity, refunds the donor’s full pledged amount, and burns the receipt.
+
+#### IOTA Implementation (Hash Map-Based):
+Donations are tracked internally via a hash map within the Crowdfund struct, where donor addresses map to their cumulative contributions. Upon campaign failure, donors call the reclaim function without needing a receipt. The contract checks the hash map for the caller’s entry: if found, it refunds their total contribution, deletes the entry, and self-destructs the crowdfund instance once the hash map is empty.
+
