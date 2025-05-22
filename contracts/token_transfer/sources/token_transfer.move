@@ -68,7 +68,7 @@ entry fun initialize(ctx: &mut TxContext){
         id: object::new(ctx),
         balance: balance::zero<IOTA>(),
         owner: ctx.sender(),
-        receiver: ctx.sender(),
+        receiver: @0xFACE,
         initialized: false
     };
     transfer::share_object(wallet);
