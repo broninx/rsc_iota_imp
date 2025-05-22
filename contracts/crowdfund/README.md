@@ -59,7 +59,7 @@ public fun withdraw(mut crowdfund: Crowdfund, clock: &Clock, ctx: &mut TxContext
         let (_, donation) = crowdfund.donors.pop();
         donations.join(donation);
     };
-    iota::transfer(donation, crowdfund.recipient);
+    iota::transfer(donations, crowdfund.recipient);
     crowdfund.destroy();
 }
 ```
