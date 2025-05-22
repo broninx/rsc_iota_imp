@@ -8,7 +8,6 @@ use iota::coin;
 use iota::iota::IOTA;
 
 const EEmptyInventory: u64 = 3;
-const EWrongAmount: u64 = 4;
 
 const OWNER : address = @0xCAFE;
 const RECEIVER: address = @0xFACE;

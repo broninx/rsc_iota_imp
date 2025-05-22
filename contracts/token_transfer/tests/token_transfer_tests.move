@@ -21,8 +21,8 @@ fun setup(): Scenario{
 
 fun deposit_test(amount: u64, sender: address, mut scenario: Scenario): Scenario{
     test_scenario::next_tx(&mut scenario, sender);
-    assert!(test_scenario::has_most_recent_shared<Wallet>(), EEmptyInventory);
-    let mut wallet = test_scenario::take_shared<Wallet>(&scenario);
+    assert!(test_scenario::has_most_recent_shared<Wallet<IOTA>>(), EEmptyInventory);
+    let mut wallet = test_scenario::take_shared<Wallet<IOTA>>(&scenario);
     let ctx = test_scenario::ctx(&mut scenario);
     let coin = coin::mint_for_testing<IOTA>(amount, ctx);
     token_transfer::deposit(coin, &mut wallet, ctx);
@@ -32,7 +32,7 @@ fun deposit_test(amount: u64, sender: address, mut scenario: Scenario): Scenario
 
 fun withdraw_test(amount: u64, sender: address, mut scenario: Scenario): Scenario{
     test_scenario::next_tx(&mut scenario, sender);
-    let mut wallet = test_scenario::take_shared<Wallet>(&scenario);
+    let mut wallet = test_scenario::take_shared<Wallet<IOTA>>(&scenario);
     let ctx = test_scenario::ctx(&mut scenario);
     token_transfer::withdraw(amount, &mut wallet, ctx); 
     test_scenario::return_shared(wallet);
@@ -58,28 +58,11 @@ public fun unauthorized_set_receiver() {
 
     test_scenario::next_tx(&mut scenario, RECEIVER);
     {   
-        let mut wallet = test_scenario::take_shared<Wallet>(&scenario);
+        let wallet = test_scenario::take_shared<Wallet<IOTA>>(&scenario);
         let ctx = test_scenario::ctx(&mut scenario);
-        token_transfer::set_receiver(RECEIVER,&mut wallet, ctx);
-        test_scenario::return_shared(wallet);
+        token_transfer::set_balance_and_receiver<IOTA>(RECEIVER, wallet, ctx);
     };
 
-    test_scenario::end(scenario);
-}
-
-#[test, expected_failure(abort_code = token_transfer::EPermissionsDenied)]
-public fun receiver_just_setted() {
-    let mut scenario = setup();
-
-    test_scenario::next_tx(&mut scenario, OWNER);
-    {
-        let mut wallet = test_scenario::take_shared<Wallet>(&scenario);
-        let ctx = test_scenario::ctx(&mut scenario);
-        token_transfer::set_receiver(RECEIVER,&mut wallet, ctx);
-        token_transfer::set_receiver(RECEIVER,&mut wallet, ctx);
-        test_scenario::return_shared(wallet);
-    };
-    
     test_scenario::end(scenario);
 }
 
