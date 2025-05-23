@@ -92,9 +92,8 @@ public fun finalize<T>(vault: &mut Vault<T>, clock: &Clock, ctx: &mut TxContext)
     assert!(vault.actual_deadline < clock.timestamp_ms(), EWrongTime);
     assert!(ctx.sender() == vault.owner, EPermissionDenied);
 
-    let withdrawal_amount = vault.amount.split(vault.withdrawal_amount);
-    let withdrawal_amount = coin::from_balance(withdrawal_amount, ctx);
-    transfer::public_transfer(withdrawal_amount, vault.owner);
+    let coin = coin::take( &mut vault.amount, vault.withdrawal_amount, ctx);
+    transfer::public_transfer(coin, vault.owner);
     vault.state = READY;
 }
 
