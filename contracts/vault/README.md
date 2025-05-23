@@ -19,3 +19,16 @@ Once the vault contract have been created, it supports the following actions:
 - Native tokens
 - Time constraints
 - Transaction revert
+
+## Differeces
+
+### Dialect differences
+
+The Vault implementation retains the same discrepancies with other diales identified in the previous implementations.
+
+### Implementation differences
+
+differences between aptos, sui and iota: 
+- **Aptos**: coherent with specifications
+- **IOTA**:  The init function is split into two parts: the first is executed during deployment, and the second is dedicated to specifying the wait_time and recovery_key parameters.
+- **Sui**: Token reception is exclusively restricted to the contract owner; the contract contains no functionality allowing other addresses to deposit tokens.
