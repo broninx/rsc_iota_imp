@@ -11,6 +11,7 @@ A set of use cases with tests taken from [rosetta-smart-contracts](https://githu
 5. [Escrow](contracts/escrow)
 6. [Auction](contracts/auction)
 7. [Crowdfund](contracts/crowdfund)
+8. [Vault](contracts/vault)
 
 ## Installation
 
