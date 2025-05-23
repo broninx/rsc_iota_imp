@@ -24,7 +24,7 @@ public struct Vault<phantom T> has key {
     withdrawal_amount: u64,
     recovery_key: vector<u8>,
     wait_time: u64,
-    actual_deadline: u64,
+    deadline: u64,
     state: u8 
 }
 
@@ -37,7 +37,7 @@ fun init(ctx: &mut TxContext){
         withdrawal_amount: 0,
         recovery_key: b"",
         wait_time: 0,
-        actual_deadline: 0,
+        deadline: 0,
         state: INIT
     };
     transfer::share_object(vault);
@@ -55,7 +55,7 @@ public fun initialize<T>(recovery_key: vector<u8>, wait_time: u64, vault: Vault<
         withdrawal_amount: _,
         recovery_key: _,
         wait_time: _,
-        actual_deadline: _,
+        deadline: _,
         state: _
     } = vault;
     old_balance.destroy_zero();
@@ -68,7 +68,7 @@ public fun initialize<T>(recovery_key: vector<u8>, wait_time: u64, vault: Vault<
         withdrawal_amount: 0,
         recovery_key: recovery_key,
         wait_time: wait_time * 1000,
-        actual_deadline: 0,
+        deadline: 0,
         state: READY
     };
     transfer::share_object(vault);
@@ -88,13 +88,13 @@ public fun withdraw<T>(amount: u64, receiver: address, vault: &mut Vault<T>,cloc
 
     vault.receiver = receiver;
     vault.withdrawal_amount = amount;
-    vault.actual_deadline = clock.timestamp_ms() + vault.wait_time;
+    vault.deadline = clock.timestamp_ms() + vault.wait_time;
     vault.state = ONGOING;
 }
 
 public fun finalize<T>(vault: &mut Vault<T>, clock: &Clock, ctx: &mut TxContext){
     assert!(vault.state == ONGOING, EWrongState);
-    assert!(vault.actual_deadline < clock.timestamp_ms(), EWrongTime);
+    assert!(vault.deadline <= clock.timestamp_ms(), EWrongTime);
     assert!(ctx.sender() == vault.owner, EPermissionDenied);
 
     let coin = coin::take( &mut vault.amount, vault.withdrawal_amount, ctx);
@@ -104,7 +104,7 @@ public fun finalize<T>(vault: &mut Vault<T>, clock: &Clock, ctx: &mut TxContext)
 
 public fun cancel<T>(recovery_key: vector<u8>, vault: &mut Vault<T>, clock: &Clock, ctx: &mut TxContext){
     assert!(vault.state == ONGOING, EWrongState);
-    assert!(vault.actual_deadline > clock.timestamp_ms(), EWrongTime);
+    assert!(vault.deadline > clock.timestamp_ms(), EWrongTime);
     assert!(ctx.sender() == vault.owner, EPermissionDenied);
     assert!(vault.recovery_key == recovery_key, EPermissionDenied);
 
@@ -121,7 +121,7 @@ public fun init_test(ctx: &mut TxContext) {
         withdrawal_amount: 0,
         recovery_key: b"",
         wait_time: 0,
-        actual_deadline: 0,
+        deadline: 0,
         state: INIT
     };
     transfer::share_object(vault);
