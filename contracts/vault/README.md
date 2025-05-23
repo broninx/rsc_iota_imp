@@ -30,5 +30,5 @@ The Vault implementation retains the same discrepancies with other diales identi
 
 differences between aptos, sui and iota: 
 - **Aptos**: coherent with specifications
-- **IOTA**:  The init function is split into two parts: the first is executed during deployment, and the second is dedicated to specifying the wait_time and recovery_key parameters.
+- **IOTA**:  coherent with specifications
 - **Sui**:No explicit deposit; `finalize` withdraws coins to a provided coin object. No explicit receiver field.
