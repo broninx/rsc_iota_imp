@@ -39,7 +39,7 @@ fun withdraw_test(sender: address,invault_amount: u64, withdrawal_amount: u64,cl
     let mut vault = ts::take_shared<Vault<IOTA>>(&scenario);
     let ctx = ts::ctx(&mut scenario);
     receive_test(invault_amount, &mut vault, ctx);
-    vault::withdraw(withdrawal_amount, &mut vault, clock, ctx);
+    vault::withdraw(withdrawal_amount,USER, &mut vault, clock, ctx);
     ts::return_shared(vault);
     scenario
 }

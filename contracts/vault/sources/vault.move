@@ -19,6 +19,7 @@ const ONGOING: u8 = 2;
 public struct Vault<phantom T> has key {
     id: UID,
     owner: address,
+    receiver: address,
     amount: Balance<T>,
     withdrawal_amount: u64,
     recovery_key: vector<u8>,
@@ -31,6 +32,7 @@ fun init(ctx: &mut TxContext){
     let vault = Vault {
         id: object::new(ctx),
         owner: ctx.sender(),
+        receiver: @0x0,
         amount: balance::zero<IOTA>(),
         withdrawal_amount: 0,
         recovery_key: b"",
@@ -48,6 +50,7 @@ public fun initialize<T>(recovery_key: vector<u8>, wait_time: u64, vault: Vault<
     let Vault {
         id: id,
         owner: owner,
+        receiver: receiver,
         amount: old_balance,
         withdrawal_amount: _,
         recovery_key: _,
@@ -60,6 +63,7 @@ public fun initialize<T>(recovery_key: vector<u8>, wait_time: u64, vault: Vault<
     let vault = Vault<T> {
         id: object::new(ctx),
         owner: owner,
+        receiver: receiver,
         amount: balance::zero<T>(),
         withdrawal_amount: 0,
         recovery_key: recovery_key,
@@ -77,11 +81,12 @@ public fun receive<T>(amount: Coin<T>, vault: &mut Vault<T>){
     vault.amount.join(amount);
 }
 
-public fun withdraw<T>(amount: u64, vault: &mut Vault<T>,clock: &Clock, ctx: &mut TxContext){
+public fun withdraw<T>(amount: u64, receiver: address, vault: &mut Vault<T>,clock: &Clock, ctx: &mut TxContext){
     assert!(vault.state == READY, ENotInitialized);
     assert!(ctx.sender() == vault.owner, EPermissionDenied);
     assert!(vault.amount.value() >= amount, ELowBalance);
 
+    vault.receiver = receiver;
     vault.withdrawal_amount = amount;
     vault.actual_deadline = clock.timestamp_ms() + vault.wait_time;
     vault.state = ONGOING;
@@ -93,7 +98,7 @@ public fun finalize<T>(vault: &mut Vault<T>, clock: &Clock, ctx: &mut TxContext)
     assert!(ctx.sender() == vault.owner, EPermissionDenied);
 
     let coin = coin::take( &mut vault.amount, vault.withdrawal_amount, ctx);
-    transfer::public_transfer(coin, vault.owner);
+    transfer::public_transfer(coin, vault.receiver);
     vault.state = READY;
 }
 
@@ -111,6 +116,7 @@ public fun init_test(ctx: &mut TxContext) {
     let vault = Vault {
         id: object::new(ctx),
         owner: ctx.sender(),
+        receiver: @0x0,
         amount: balance::zero<IOTA>(),
         withdrawal_amount: 0,
         recovery_key: b"",
