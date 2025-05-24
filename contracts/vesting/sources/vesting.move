@@ -51,8 +51,7 @@ public fun release(vesting: &mut Vesting, clock: &Clock, ctx: &mut TxContext){
     assert!(vesting.initialized, EPermissionDenied);
 
     let clamped_time = max(vesting.start, min(vesting.end, clock.timestamp_ms()));
-    let percentage = ((clamped_time - vesting.start)*100) / (vesting.end - vesting.start);
-    let amount = (vesting.balance.value() * percentage) / 100 ;
+    let amount = vesting.balance.value() * (clamped_time - vesting.start)/ (vesting.end - vesting.start);
     let coin = coin::take(&mut vesting.balance, amount, ctx);
     transfer::public_transfer(coin, vesting.beneficiary);
 }
