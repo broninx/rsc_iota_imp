@@ -33,7 +33,9 @@ fun init(ctx: &mut TxContext){
     transfer::share_object(vesting);
 }
 
-public fun initialize(beneficiary: address, start: u64, duration: u64, amount: Coin<IOTA>, vesting: &mut Vesting, clock: &Clock, ctx: &mut TxContext){
+public fun initialize(beneficiary: address, start: u64, duration: u64, 
+    amount: Coin<IOTA>, vesting: &mut Vesting, clock: &Clock, ctx: &mut TxContext)
+{
     assert!(!vesting.initialized, EPermissionDenied);
     assert!(vesting.owner == ctx.sender(), EPermissionDenied);
 
