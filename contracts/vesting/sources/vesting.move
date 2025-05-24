@@ -5,6 +5,7 @@ use iota::balance::{Self, Balance};
 use iota::iota::IOTA;
 use iota::coin::{Self, Coin};
 use iota::clock::Clock;
+use 0x1::u64::{max, min};
 
 const EPermissionDenied: u64 = 0;
 
@@ -43,27 +44,15 @@ public fun initialize(beneficiary: address, start: u64, duration: u64, amount: C
     vesting.initialized = true;
 }
 
-fun normalize(min: u64, max: u64, value: u64): u64{
-    if (value < min) {
-        min
-    } else if (value > max) {
-        max
-    } else {
-       value 
-    }
-}
-
 public fun release(vesting: &mut Vesting, clock: &Clock, ctx: &mut TxContext){
     assert!(vesting.beneficiary == ctx.sender(), EPermissionDenied);
     assert!(vesting.initialized, EPermissionDenied);
 
-    let normalized_time = normalize(vesting.start, vesting.end, clock.timestamp_ms());
-    let percentage = ((normalized_time - vesting.start)*100) / (vesting.end - vesting.start);
-
+    let clamped_time = max(vesting.start, min(vesting.end, clock.timestamp_ms()));
+    let percentage = ((clamped_time - vesting.start)*100) / (vesting.end - vesting.start);
     let amount = (vesting.balance.value() * percentage) / 100 ;
     let coin = coin::take(&mut vesting.balance, amount, ctx);
     transfer::public_transfer(coin, vesting.beneficiary);
-
 }
 
 #[test_only]
