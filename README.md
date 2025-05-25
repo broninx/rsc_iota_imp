@@ -13,6 +13,7 @@ A set of use cases with tests taken from [rosetta-smart-contracts](https://githu
 7. [Crowdfund](contracts/crowdfund)
 8. [Vault](contracts/vault)
 9. [Vesting](contracts/vesting)
+10. [Storage](contracts/storage)
 
 ## Installation
 
