@@ -1,0 +1,30 @@
+---
+compiled_package_info:
+  package_name: storage
+  address_alias_instantiation:
+    iota: "0000000000000000000000000000000000000000000000000000000000000002"
+    std: "0000000000000000000000000000000000000000000000000000000000000001"
+    storage: "0000000000000000000000000000000000000000000000000000000000000000"
+  source_digest: 7192373972735D6E105D0AD6F8CAB0D5D67949A3602F888B26C1EC73DBEC61AB
+  build_flags:
+    dev_mode: true
+    test_mode: true
+    generate_docs: false
+    install_dir: ~
+    force_recompilation: false
+    lock_file: ~
+    fetch_deps_only: false
+    skip_fetch_latest_git_deps: false
+    default_flavor: iota
+    default_edition: ~
+    deps_as_root: false
+    silence_warnings: false
+    warnings_are_errors: false
+    json_errors: false
+    additional_named_addresses: {}
+    lint_flag:
+      no_lint: false
+      lint: false
+dependencies:
+  - Iota
+  - MoveStdlib
