@@ -22,6 +22,10 @@ After creation, the contract supports the following action:
 - Time constraints
 - Transaction revert
 
+## Implementation
+
+The init and initialize functions followed the same implementation patterns, with no distinct differences with other implementations.
+
 ## Implementation Differences
 
 The Vesting implementation retains the same discrepancies with other diales identified in the previous implementations.
