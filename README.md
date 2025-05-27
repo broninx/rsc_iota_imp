@@ -14,6 +14,7 @@ A set of use cases with tests taken from [rosetta-smart-contracts](https://githu
 8. [Vault](contracts/vault)
 9. [Vesting](contracts/vesting)
 10. [Storage](contracts/storage)
+11. [Simple wallet](contracts/simple_wallet)
 
 ## Installation
 
