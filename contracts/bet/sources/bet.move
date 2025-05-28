@@ -46,20 +46,20 @@ module bet::bet;
     oracle: &Oracle,
     ctx: &mut TxContext
     ){
-        let wager = coin::into_balance(wager);
+        let wager = wager.into_balance();
         let bet = Bet<T>{
           id: object::new(ctx),
           amount: wager,
           player1: p1,
           player2: p2,
           oracle: oracle.addr,
-          timeout: timestamp_ms(clock) + oracle.deadline 
+          timeout: clock.timestamp_ms() + oracle.deadline 
         };
         transfer::share_object(bet);
     }
   
   public fun win<T> (bet: Bet<T>, winner: address, clock: &Clock, ctx: &mut TxContext) {
-    assert!(timestamp_ms(clock) < bet.timeout, EOverTimeLimit);
+    assert!(clock.timestamp_ms() < bet.timeout, EOverTimeLimit);
     assert!(winner == bet.player1 || winner == bet.player2, EWinnerNotPlayer);
     assert!(bet.oracle == ctx.sender(), EPermissionDenied);
 
@@ -67,13 +67,13 @@ module bet::bet;
     let wager = coin::from_balance(wager, ctx);
     transfer::public_transfer(wager, winner);
 
-    object::delete(id);
+    id.delete();
   }
   
   public fun timeout<T> (bet: Bet<T>, clock: &Clock, ctx: &mut TxContext){
     assert!(clock.timestamp_ms() > bet.timeout, ETimeIsNotFinish);
     let Bet {id: id, amount:mut wager, player1: p1, player2: p2,oracle: _, timeout: _} = bet;
-    object::delete(id);
+    id.delete();
     let amount = wager.value();
 
     let wager1 = wager.split(amount /2);

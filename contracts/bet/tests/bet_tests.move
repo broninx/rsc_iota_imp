@@ -5,7 +5,7 @@ module bet::bet_tests {
     use bet::bet;
     use iota::coin;
     use iota::clock::{Self, Clock};
-    use iota::test_scenario::{Self, Scenario};
+    use iota::test_scenario::{Self as ts, Scenario};
     use iota::iota::IOTA;
 
     const EEmptyInventory: u64 = 4;
@@ -16,47 +16,43 @@ module bet::bet_tests {
 
 
     public fun setup(): Scenario{
-        let mut scenario = test_scenario::begin(ORACLE);
-        let ctx = test_scenario::ctx(&mut scenario);
+        let mut scenario = ts::begin(ORACLE);
+        let ctx = scenario.ctx();
         bet::init_test(ctx); 
         scenario
     }
 
     public fun join_test(mut scenario: Scenario): Scenario{
-        test_scenario::next_tx(&mut scenario, PLAYER1);
-        assert!(test_scenario::has_most_recent_shared<bet::Oracle>(), EEmptyInventory);
-        let oracle = test_scenario::take_shared<bet::Oracle>(& scenario);
-        let ctx = test_scenario::ctx(&mut  scenario);
+        scenario.next_tx(PLAYER1);
+        assert!(ts::has_most_recent_shared<bet::Oracle>(), EEmptyInventory);
+        let oracle = scenario.take_shared<bet::Oracle>();
+        let ctx = scenario.ctx();
         let cl = clock::create_for_testing(ctx);
         let coin = coin::mint_for_testing<IOTA>(10, ctx);
         bet::join(& cl, coin,
         PLAYER1, PLAYER2,&oracle, ctx);
         cl.destroy_for_testing();
-        test_scenario::return_shared(oracle);
+        ts::return_shared(oracle);
         scenario
     }
 
     fun win_test(winner: address, sender: address, clock: Clock, mut scenario: Scenario){
-        test_scenario::next_tx(&mut scenario, sender);
-        assert!(test_scenario::has_most_recent_shared<bet::Bet<IOTA>>(), EEmptyInventory);
-        let bet = test_scenario::take_shared<bet::Bet<IOTA>>(&scenario); 
-        let oracle = test_scenario::take_shared<bet::Oracle>(&scenario); 
-        let ctx = test_scenario::ctx(&mut scenario);
+        scenario.next_tx(sender);
+        assert!(ts::has_most_recent_shared<bet::Bet<IOTA>>(), EEmptyInventory);
+        let bet = scenario.take_shared<bet::Bet<IOTA>>(); 
+        let ctx = scenario.ctx();
         bet::win(bet, winner,&clock,ctx);
-        test_scenario::return_shared(oracle);
         clock.destroy_for_testing();
-        test_scenario::end( scenario);
+        scenario.end();
     }
 
     fun timeout_test(clock: Clock, mut scenario: Scenario){
-        test_scenario::next_tx(&mut scenario, PLAYER1);
-        let bet = test_scenario::take_shared<bet::Bet<IOTA>>(&scenario); 
-        let oracle = test_scenario::take_shared<bet::Oracle>(&scenario); 
-        let ctx = test_scenario::ctx(&mut scenario);
+        scenario.next_tx(PLAYER1);
+        let bet = scenario.take_shared<bet::Bet<IOTA>>(); 
+        let ctx = scenario.ctx();
         bet::timeout(bet, &clock,ctx);
         clock.destroy_for_testing();
-        test_scenario::return_shared(oracle);
-        test_scenario::end( scenario);
+        scenario.end();
     } 
 
     #[test]
@@ -65,7 +61,7 @@ module bet::bet_tests {
 
         let mut scenario = join_test(scenario);
 
-        let ctx = test_scenario::ctx(&mut scenario);
+        let ctx = scenario.ctx();
         let cl = clock::create_for_testing(ctx);
         win_test(PLAYER1, ORACLE, cl, scenario);
     }
@@ -77,7 +73,7 @@ module bet::bet_tests {
         
         let mut scenario = join_test(scenario);
         
-        let ctx = test_scenario::ctx(&mut scenario);
+        let ctx = scenario.ctx();
         let mut cl = clock::create_for_testing(ctx);
         cl.increment_for_testing(600001);
         timeout_test(cl, scenario);
@@ -89,7 +85,7 @@ module bet::bet_tests {
         let scenario = setup();
 
         let mut scenario = join_test(scenario);
-        let ctx = test_scenario::ctx(&mut scenario);
+        let ctx = scenario.ctx();
         let mut clock = clock::create_for_testing(ctx);
         clock.increment_for_testing(600001);
         win_test(PLAYER1, ORACLE, clock, scenario) 
@@ -101,7 +97,7 @@ module bet::bet_tests {
         let scenario = setup();
         
         let mut scenario = join_test(scenario);
-        let ctx = test_scenario::ctx(&mut scenario);
+        let ctx = scenario.ctx();
         let clock = clock::create_for_testing(ctx);
         
         win_test(PLAYER1, PLAYER2, clock, scenario)
@@ -112,7 +108,7 @@ module bet::bet_tests {
         let scenario = setup();
         
         let mut scenario = join_test(scenario);
-        let ctx = test_scenario::ctx(&mut scenario);
+        let ctx = scenario.ctx();
         let clock = clock::create_for_testing(ctx);
 
         win_test(ORACLE, ORACLE, clock, scenario)
@@ -124,7 +120,7 @@ module bet::bet_tests {
         let scenario = setup();
         
         let mut scenario = join_test(scenario);
-        let ctx = test_scenario::ctx(&mut scenario);
+        let ctx = scenario.ctx();
         let clock = clock::create_for_testing(ctx);
 
         timeout_test(clock, scenario);
