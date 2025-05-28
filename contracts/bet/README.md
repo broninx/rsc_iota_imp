@@ -39,6 +39,28 @@ A package's utility is defined by its modules. A module contains the logic for y
 module bet::bet;
 ```
 
+Each object value is a struct with fields that can include primitive types (such as integers and addresses), other objects, and non-object structs. In this module we have two struct: Bet and Oracle.
+
+```move
+  public struct Oracle has key, store {
+    id: UID,
+    addr: address,
+    deadline: u64
+  }
+
+  public struct Bet<phantom T> has key {
+    id: UID,
+    amount: Balance<T>,
+    player1: address,
+    player2: address,
+    oracle: address,
+    timeout: u64
+  }
+```
+After the keyword `has` we have the abilities. Abilities are a way to allow certain behaviors for a type. They are a part of the struct declaration and define which behaviors are allowed for the instances of the struct. Bet have the [key ability](https://move-book.com/reference/abilities.html#key) that allows the struct to be used as a key in a storage. Oracle instead, have also the [store ability](https://move-book.com/reference/abilities.html#store) that allows the struct to be stored in structs that have the key ability.
+
+The first field of Bet and Oracle is the id. [UID](https://docs.iota.org/references/framework/testnet/iota-framework/object#struct-uid) is the globally unique IDs that define an object's ID in storage. Any IOTA Object, that is a struct with the key ability, must have id: UID as its first field. These are globally unique in the sense that no two values of type UID are ever equal
+
 #### Initialization
 
 In Move, the [init](https://docs.iota.org/developer/iota-101/move-overview/init) function plays a critical role during the module's lifecycle, executing only once at the moment of module publication. To ensure proper usage, the init function must conform to specific criteria:
