@@ -33,34 +33,17 @@ public fun initialize(
     preimage: vector<u8>, 
     timeout: u64, 
     coin: Coin<IOTA>,
-    htlc: Htlc,
+    htlc: &mut Htlc,
     clock: &Clock, 
     ctx: &mut TxContext){
     assert!(ctx.sender() == htlc.committer, EPermissionDenied);
     assert!(!htlc.initialized, EJustInitialized);
 
-    let Htlc {
-        id: id, 
-        committer: committer,
-        receiver: _,
-        hash: _,
-        deadline: _,
-        amount: mut htlc_coin,
-        initialized: _
-    } = htlc;
-
-    htlc_coin.join(coin);
-    let htlc = Htlc {
-        id: object::new(ctx),
-        committer: committer,
-        receiver: receiver,
-        hash: hash::keccak256(&preimage),
-        deadline: clock::timestamp_ms(clock) + timeout,
-        amount: htlc_coin,
-        initialized: true
-    };
-    object::delete(id);
-    transfer::share_object(htlc);
+    htlc.receiver = receiver;
+    htlc.hash = hash::keccak256(&preimage);
+    htlc.deadline = clock::timestamp_ms(clock) + timeout;
+    htlc.amount.join(coin::into_balance(coin));
+    htlc.initialized = true;
 }
 ```
 
