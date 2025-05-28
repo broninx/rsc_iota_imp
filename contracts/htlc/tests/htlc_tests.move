@@ -13,10 +13,6 @@ const EEmptyInventory: u64 = 4;
 const OWNER: address = @0xCAFE;
 const RECEIVER: address = @0xFACE;
 
-// public struct Secret has drop {
-//     hash: vector<u8>
-// }
-
 public fun setup(): test_scenario::Scenario {
     let mut scenario = test_scenario::begin(OWNER);
     {
@@ -78,7 +74,7 @@ fun intended_way_timeout() {
         let ctx = test_scenario::ctx(&mut scenario);
         let mut clock = clock::create_for_testing(ctx);
         clock.increment_for_testing(htlc.deadline() + 1);
-        htlc::timeout(&clock, htlc);
+        htlc::timeout(&clock, htlc, ctx);
         assert!(!test_scenario::has_most_recent_shared<Htlc>(), EEmptyInventory);
         clock::destroy_for_testing(clock);
     };
@@ -122,7 +118,7 @@ fun time_not_finished(){
         let ctx = test_scenario::ctx(&mut scenario);
         let mut clock = clock::create_for_testing(ctx);
         clock.increment_for_testing(htlc.deadline() - 1);
-        htlc::timeout(&clock, htlc);
+        htlc::timeout(&clock, htlc, ctx);
         assert!(!test_scenario::has_most_recent_shared<Htlc>(), EEmptyInventory);
         clock::destroy_for_testing(clock);
     };

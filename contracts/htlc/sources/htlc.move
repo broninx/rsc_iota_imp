@@ -1,6 +1,7 @@
 module htlc::htlc;
 
 use iota::coin::{Self, Coin};
+use iota::balance::{Self, Balance};
 use iota::hash;
 use iota::iota::{Self, IOTA};
 use iota::clock::{Self, Clock};
@@ -16,7 +17,7 @@ public struct Htlc has key {
     receiver: address,
     hash: vector<u8>,
     deadline: u64,
-    amount: Coin<IOTA>,
+    amount: Balance<IOTA>,
     initialized: bool
 }
 
@@ -27,7 +28,7 @@ fun init(ctx: &mut TxContext){
         receiver: ctx.sender(),
         hash: b"temp",
         deadline: 0,
-        amount: coin::zero<IOTA>(ctx),
+        amount: balance::zero<IOTA>(),
         initialized: false
     };
     transfer::share_object(htlc);
@@ -50,21 +51,22 @@ public fun initialize(
         receiver: _,
         hash: _,
         deadline: _,
-        amount: mut htlc_coin,
+        amount: mut htlc_balance,
         initialized: _
     } = htlc;
 
-    htlc_coin.join(coin);
+    let balance = coin::into_balance(coin);
+    htlc_balance.join(balance);
     let htlc = Htlc {
         id: object::new(ctx),
         committer: committer,
         receiver: receiver,
         hash: hash::keccak256(&preimage),
         deadline: clock::timestamp_ms(clock) + timeout,
-        amount: htlc_coin,
+        amount: htlc_balance,
         initialized: true
     };
-    object::delete(id);
+    id.delete();
     transfer::share_object(htlc);
 }
 
@@ -78,14 +80,15 @@ public fun reveal(secret: vector<u8>, htlc: Htlc, ctx: &mut TxContext){
         receiver: _,
         hash: _,
         deadline: _,
-        amount: coin,
+        amount: balance,
         initialized: _
     } = htlc;
     object::delete(id);
+    let coin = coin::from_balance(balance, ctx);
     iota::transfer(coin, committer);
 }
 
-public fun timeout(clock: &Clock, htlc: Htlc){
+public fun timeout(clock: &Clock, htlc: Htlc, ctx: &mut TxContext){
     assert!(clock::timestamp_ms(clock) > htlc.deadline, ETimeNotFinished);
     let Htlc {
         id: id,
@@ -93,11 +96,12 @@ public fun timeout(clock: &Clock, htlc: Htlc){
         receiver: receiver,
         hash: _,
         deadline: _,
-        amount: coin,
+        amount: balance,
         initialized: _
     } = htlc;
 
     object::delete(id);
+    let coin = coin::from_balance(balance, ctx);
     iota::transfer(coin, receiver);
 
 }
@@ -110,7 +114,7 @@ public fun init_test(ctx: &mut TxContext){
         receiver: ctx.sender(),
         hash: b"temp",
         deadline: 0,
-        amount: coin::zero<IOTA>(ctx),
+        amount: balance::zero<IOTA>(),
         initialized: false
     };
     transfer::share_object(htlc);
