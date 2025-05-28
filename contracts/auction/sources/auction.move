@@ -65,12 +65,12 @@ public fun bid(bid: Coin<IOTA>, auction: &mut Auction, clock:&Clock, ctx: &mut T
     assert!(auction.deadline >= clock.timestamp_ms(), ETimeFinished);
     assert!(bid.value() > auction.top_bid.value(), EBidTooMuchLower);
     assert!(auction.state == ONGOING, EPermissionDenied);
-    let low_amount = auction.top_bid.value();
-    let low_bid = auction.top_bid.split(low_amount);
+
+    let low_bid = coin::take(auction.top_bid, auction.top_bid.value(), ctx);
+    transfer::public_transfer(low_bid, auction.bidder);
+
     let top_bid = coin::into_balance(bid);
     auction.top_bid.join(top_bid);
-    let low_bid = coin::from_balance(low_bid, ctx);
-    transfer::public_transfer(low_bid, auction.bidder);
     auction.bidder = ctx.sender();
 }
 
