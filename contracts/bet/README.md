@@ -41,7 +41,12 @@ module bet::bet;
 
 #### Initialization
 
-In Move, the [init](https://docs.iota.org/developer/iota-101/move-overview/init) function plays a critical role during the module's lifecycle, executing only once at the moment of module publication.
+In Move, the [init](https://docs.iota.org/developer/iota-101/move-overview/init) function plays a critical role during the module's lifecycle, executing only once at the moment of module publication. To ensure proper usage, the init function must conform to specific criteria:
+- **Function Name**: The function must be named init.
+- **Parameter List**: The last parameter must be of type &mut TxContext or &TxContext(in [TxContext struct](https://docs.iota.org/references/framework/testnet/iota-framework/tx_context#0x2_tx_context_TxContext) are stored all inforations about the transaction currently being executed).
+- **Return Values**: The function must not return any values.
+- **Visibility**: The function should be private.
+- **Optional Parameter**: The parameter list may optionally begin by accepting the module's [one-time witness](https://docs.iota.org/developer/iota-101/move-overview/one-time-witness) by value.
 
 ```move
 fun init (ctx: &mut TxContext){
@@ -53,7 +58,7 @@ fun init (ctx: &mut TxContext){
       transfer::share_object(oracle);
   }
 ```
-The function instantiates an oracle, which is subsequently shared across the chain via the [share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function and get accessible the oracle instance for reads and writes by any transaction.
+The function instantiates an Oracle, which is subsequently shared across the chain via the [share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function and get accessible the oracle instance for reads and writes by any transaction.
 
 To set the deadline the Oracle can use the `initialize` function: 
  ```move
@@ -90,7 +95,7 @@ public fun join<T> (
 
 To call the `join` function we require six parameters to be passed to the contract:
 
-- **clock**: timestamp employed to record the initiation time of the wager;
+- **clock**: [Clock struct](https://docs.iota.org/references/framework/testnet/iota-framework/clock#0x2_clock_Clock) is a Singleton shared object that exposes time to Move calls. This object can only be read (accessed via an immutable reference) by entry functions. We need it to take the timestamp to record the initiation time of the wager;
 - **wager**: a [coin](https://docs.iota.org/references/framework/iota-framework/coin) that enable participants to commit either the network’s native token or externally-defined fungible tokens;
 - **p1 & p2**: two distinct addresses uniquely identify the counterparties involved in the wager;
 - **oracle**: the oracle that decide the winner of the wager;
@@ -127,7 +132,7 @@ The function begins with three assertion checks:
 - Confirmation that the declared winner's address matches either of the two registered player addresses
 - Authentication that the function caller holds the designated oracle role
 
-Upon successful validation of all assertions, the function initiates the bet resolution process. This involves the [unpack](https://docs.iota.org/developer/iota-101/move-overview/structs-and-abilities/struct#Unpacking-a-Stuct) the bet instance to close it and the transfer of the entirety of the wager amount to the winner’s address via the [public_transfer](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-public_transfer) function.
+Upon successful validation of all assertions, the function initiates the bet resolution process. This involves the [unpacking](https://docs.iota.org/developer/iota-101/move-overview/structs-and-abilities/struct#Unpacking-a-Stuct) of bet instance to close it and then transfer the entirety of the wager amount to the winner’s address via the [public_transfer](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-public_transfer) function (Transfer ownership of `wager` to `winner`).
 
 #### Timeout
 
