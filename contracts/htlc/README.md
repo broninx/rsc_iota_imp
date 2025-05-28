@@ -51,6 +51,7 @@ The committer must provide the following parameters during initialization via th
 - **Receiver Address**: Designated to receive funds in the event of a timeout.
 - **Native Cryptocurrency Amount**: The locked value (e.g., in IOTA).
 - **Timeout Duration**: A predefined period (in milliseconds) before the contract expires.
+- **hash phrase**: A secret bitstring (that will be automatically changed with his respective keccak-256 digest by the [keccak256 function](https://docs.iota.org/references/framework/testnet/iota-framework/hash#function-keccak256))
 
 The function automatically captures the current timestamp (in ms) as a clock parameter, which is combined with the `deadline` to calculate the deadline.
 
