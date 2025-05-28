@@ -53,8 +53,7 @@ public fun withdraw<T>(amount: u64, wallet: &mut Wallet<T>, ctx: &mut TxContext)
     assert!(ctx.sender() == wallet.receiver, EPermissionsDenied);
     assert!(amount <= wallet.balance.value(), EBiggerThanBalance);
 
-    let withdraw_balance = wallet.balance.split(amount);
-    let withdraw_coin = coin::from_balance(withdraw_balance, ctx);
+    let withdraw_coin = coin::take<T>(&mut wallet.balance, amount, ctx);
     transfer::public_transfer(withdraw_coin, wallet.receiver);
 }
 
