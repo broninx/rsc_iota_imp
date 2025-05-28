@@ -26,13 +26,14 @@ public fun initialize_htlc(sender: address, mut scenario: test_scenario::Scenari
     test_scenario::next_tx(&mut scenario, sender);
     {
         assert!(test_scenario::has_most_recent_shared<Htlc>(), EEmptyInventory);
-        let htlc = test_scenario::take_shared<Htlc>(&scenario);
+        let mut htlc = test_scenario::take_shared<Htlc>(&scenario);
         let ctx = test_scenario::ctx(&mut scenario);
         let hash = b"Hello";
         let two_min = 120000;
         let coin = coin::mint_for_testing<IOTA>(1000, ctx);
         let clock = clock::create_for_testing(ctx);
-        htlc::initialize(RECEIVER, hash, two_min, coin, htlc, &clock, ctx);
+        htlc::initialize(RECEIVER, hash, two_min, coin, &mut htlc, &clock, ctx);
+        test_scenario::return_shared(htlc);
         clock::destroy_for_testing(clock);
     };
     scenario
