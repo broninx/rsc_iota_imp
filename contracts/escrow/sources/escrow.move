@@ -47,7 +47,7 @@ public fun deposit(amount: Coin<IOTA>, escrow: &mut Escrow, ctx: &mut TxContext)
     assert!(escrow.amount_required == amount.value(), EWrongAmount);
     assert!(escrow.state == IDLE, EPermissionDenied);
 
-    let amount = coin::into_balance(amount);
+    let amount = amount.into_balance();
     escrow.amount.join(amount);
     escrow.state = ACTIVE;
 }
