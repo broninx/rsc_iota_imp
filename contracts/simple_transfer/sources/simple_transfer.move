@@ -2,14 +2,14 @@ module simple_transfer::simple_transfer;
 
 use iota::coin::{Self, Coin};
 use iota::iota::{Self, IOTA};
-use iota::balance;
+use iota::balance::{Self, Balance};
 
 const EPermissionsDenied: u64 = 0;
 const EBiggerThanBalance: u64 = 1;
 
 public struct Wallet has key {
     id: UID,
-    balance: balance::Balance<IOTA>,
+    balance: Balance<IOTA>,
     owner: address,
     receiver: address,
     initialized: bool
@@ -37,7 +37,7 @@ public fun set_receiver(receiver: address,wallet: &mut Wallet, ctx: &mut TxConte
 public fun deposit(amount: Coin<IOTA>,wallet:&mut Wallet, ctx: &mut TxContext){
     assert!(ctx.sender() == wallet.owner, EPermissionsDenied);
     
-    let balance_to_deposite = coin::into_balance<IOTA>(amount);
+    let balance_to_deposite = amount.into_balance<IOTA>();
     wallet.balance.join(balance_to_deposite);
 }
 
@@ -45,9 +45,8 @@ public fun withdraw(amount: u64, wallet: &mut Wallet, ctx: &mut TxContext){
     assert!(ctx.sender() == wallet.receiver, EPermissionsDenied);
     assert!(amount <= wallet.balance.value(), EBiggerThanBalance);
 
-    let withdraw_balance = wallet.balance.split(amount);
-    let withdraw_coin = coin::from_balance(withdraw_balance, ctx);
-    iota::transfer(withdraw_coin, ctx.sender());
+    let coin = coin::take<IOTA>(&mut wallet.balance, amount, ctx);
+    iota::transfer(coin, ctx.sender());
 }
 
 #[test_only]
