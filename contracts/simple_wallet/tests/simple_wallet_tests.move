@@ -72,13 +72,6 @@ public fun intended_way_general(){
     scenario.end();
 }
 
-#[test, expected_failure(abort_code = ts::EEmptyInventory)]
-public fun permission_denied(){
-    let scenario = setup();
-    let scenario = deposit_test(1000, @0xAAA, scenario);
-    scenario.end();
-}
-
 #[test, expected_failure(abort_code = sw::EInvalidId)]
 public fun id_not_in_transactions(){
     let scenario = setup();

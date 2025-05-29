@@ -33,6 +33,7 @@ fun init(ctx: &mut TxContext){
     transfer::public_transfer(wallet, ctx.sender());
 }
 
+// only Wallet's owner can pass as parameter his Wallet reference
 public fun deposit(coin: Coin<IOTA>, wallet: &mut Wallet){
     wallet.balance.join(coin::into_balance(coin));
 }
