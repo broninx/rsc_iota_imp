@@ -18,3 +18,65 @@ After contract creation, the contract supports the following actions:
 - Native tokens
 - Transaction revert
 - Dynamic arrays
+
+## Implementation
+
+### Create transaction
+
+```move
+public fun createTransaction(recipient: address, value: u64, data: vector<u8>, wallet: &mut Wallet, ctx: &mut TxContext){
+    assert!(ctx.sender() == wallet.owner, EPermissionDenied);
+    let uid = object::new(ctx);
+    let transaction = Transaction {
+        id: *uid.as_inner(),
+        recipient: recipient,
+        value: value,
+        data: data
+    };
+    wallet.transactions.push_back(transaction);
+    object::delete(uid);
+}
+```
+The createTransaction function enables a wallet owner to initiate a new transaction by specifying three core parameters:
+- recipient: The destination address
+- value: The amount of tokens to transfer
+- data: A custom payload represented as a vector<u8> (Move's string equivalent)
+
+Upon execution, this function constructs a Transaction struct containing these parameters and appends it to the wallet's internal transaction list. This queue-based approach maintains an auditable record of pending transactions within the wallet's state while deferring actual blockchain operations to subsequent processing steps.
+
+The UID struct is IOTA Move's way of making sure every on-chain object has a completely unique identity. It wraps around a core ID value to provide this guarantee. When creating transactions, we follow a careful two-step approach: First, we generate a new UID and extract its unique ID value. Then, we immediately destroy the original UID container. This ensures every transaction ID remains truly one-of-a-kind - you can be confident there are no duplicates anywhere in the blockchain's records.
+
+### executeTransaction
+
+```move
+public fun executeTransaction(id: ID, wallet: &mut Wallet, ctx: &mut TxContext){
+    let mut transaction_opt = extract(&mut wallet.transactions, id);
+    assert!(ctx.sender() == wallet.owner, EPermissionDenied);
+    assert!(transaction_opt.is_some(), EInvalidId);
+    let transaction = transaction_opt.extract();
+    assert!(transaction.value <= wallet.balance.value(), ELowBalance);
+
+    let coin = coin::take(&mut wallet.balance, transaction.value, ctx);
+    transfer::public_transfer(coin, transaction.recipient);
+}
+```
+The executeTransaction function enables wallet owners to process pending transactions by specifying a transaction ID. It works by:
+1. Using the extract function to locate and retrieve the specific transaction from the wallet's transaction queue
+```move
+fun extract(transactions: &mut vector<Transaction>, id: ID): Option<Transaction>{
+    let mut i = 0;
+    let mut transaction = option::none();
+    while( i < transactions.length<Transaction>() ){
+        if (transactions[i].id == id){
+            transaction = option::some(transactions.remove<Transaction>(i));
+            break
+        };
+        i = i + 1;
+    };
+    transaction
+} 
+```
+2. Verifying two critical conditions:
+   - The transaction exists
+   - The wallet balance is sufficient to cover the transfer amount
+3. If both conditions are satisfied, executing the transfer of specified tokens to the recipient.
