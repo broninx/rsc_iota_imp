@@ -93,3 +93,26 @@ fun extract(transactions: &mut vector<Transaction>, id: ID): Option<Transaction>
    - The transaction exists
    - The wallet balance is sufficient to cover the transfer amount
 3. If both conditions are satisfied, executing the transfer of specified tokens to the recipient.
+
+## Differences
+
+### Dialect differences
+
+The simple wallet implementation retains the same discrepancies with other diales identified in the previous implementations.
+
+### Implementation differences
+
+#### Aptos
+- Maintains a pending transactions array within each Wallet struct
+- Uses the transaction's index in this wallet-specific array as its ID
+- Transaction execution references this index
+
+#### IOTA
+- Generates a new unique ID (UID) during transaction creation
+- The UID is cryptographically derived from transaction content
+- Transaction ID is extracted ("unwrapped") from this UID
+
+#### Sui
+- No wallet-level transaction lists maintained
+- Transactions are self-contained objects stored on-chain
+- `executeTransaction` consumes full transaction objects (not IDs)
