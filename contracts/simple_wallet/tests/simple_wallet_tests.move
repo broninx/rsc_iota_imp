@@ -21,40 +21,40 @@ fun setup(): Scenario {
 
 fun deposit_test(amount: u64, sender: address, mut scenario: Scenario): Scenario{
     scenario.next_tx(sender);
-    let mut wallet = scenario.take_shared<Wallet>();
+    let mut wallet = scenario.take_from_address<Wallet>(sender);
     let ctx = scenario.ctx();
     let coin = coin::mint_for_testing<IOTA>(amount, ctx);
-    sw::deposit(coin, &mut wallet, ctx);
-    ts::return_shared(wallet);
+    sw::deposit(coin, &mut wallet);
+    ts::return_to_address(sender, wallet);
     scenario
 }
 
 fun create_test(amount: u64, sender: address, mut scenario: Scenario): (Scenario, ID){
     scenario.next_tx(sender);
-    let mut wallet = scenario.take_shared<Wallet>();
+    let mut wallet = scenario.take_from_address<Wallet>(sender);
     let ctx = scenario.ctx();
     sw::createTransaction(RECIPIENT, amount, b"gift", &mut wallet, ctx);
     let transactions = wallet.transactions();
     let id = sw::id(transactions, transactions.length()-1);
-    ts::return_shared(wallet);
+    ts::return_to_address(sender, wallet);
     (scenario, id)
 }
 
 fun withdraw_test(amount: u64, sender: address, mut scenario: Scenario): Scenario{
     scenario.next_tx(sender);
-    let mut wallet = scenario.take_shared<Wallet>();
+    let mut wallet = scenario.take_from_address<Wallet>(sender);
     let ctx = scenario.ctx();
     sw::withdraw(amount, &mut wallet, ctx);
-    ts::return_shared(wallet);
+    ts::return_to_address(sender, wallet);
     scenario
 }
 
 fun executeTransaction_test(id: ID, sender: address, mut scenario: Scenario): Scenario{
     scenario.next_tx(sender);
-    let mut wallet = scenario.take_shared<Wallet>();
+    let mut wallet = scenario.take_from_address<Wallet>(sender);
     let ctx = scenario.ctx();
     sw::executeTransaction(id, &mut wallet, ctx);
-    ts::return_shared(wallet);
+    ts::return_to_address(sender, wallet);
     scenario
 }
 
@@ -69,6 +69,13 @@ public fun intended_way_general(){
     let scenario = executeTransaction_test(id0 , OWNER, scenario);
     let scenario = deposit_test(5000, OWNER, scenario);
     let scenario = executeTransaction_test(id1, OWNER, scenario);
+    scenario.end();
+}
+
+#[test, expected_failure(abort_code = ts::EEmptyInventory)]
+public fun permission_denied(){
+    let scenario = setup();
+    let scenario = deposit_test(1000, @0xAAA, scenario);
     scenario.end();
 }
 

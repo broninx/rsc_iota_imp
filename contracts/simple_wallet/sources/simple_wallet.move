@@ -9,7 +9,7 @@ const EPermissionDenied: u64 = 0;
 const EInvalidId: u64 = 1;
 const ELowBalance: u64 = 2;
 
-public struct Wallet has key {
+public struct Wallet has key, store {
     id: UID,
     owner: address,
     balance: Balance<IOTA>,
@@ -30,17 +30,14 @@ fun init(ctx: &mut TxContext){
         balance: balance::zero<IOTA>(),
         transactions: vector::empty<Transaction>()
     };
-    transfer::share_object(wallet);
+    transfer::public_transfer(wallet, ctx.sender());
 }
 
-public fun deposit(coin: Coin<IOTA>, wallet: &mut Wallet, ctx: &mut TxContext){
-    assert!(ctx.sender() == wallet.owner, EPermissionDenied);
-
+public fun deposit(coin: Coin<IOTA>, wallet: &mut Wallet){
     wallet.balance.join(coin::into_balance(coin));
 }
 
 public fun createTransaction(recipient: address, value: u64, data: vector<u8>, wallet: &mut Wallet, ctx: &mut TxContext){
-    assert!(ctx.sender() == wallet.owner, EPermissionDenied);
     let uid = object::new(ctx);
     let transaction = Transaction {
         id: *uid.as_inner(),
@@ -67,7 +64,6 @@ fun extract(transactions: &mut vector<Transaction>, id: ID): Option<Transaction>
 
 public fun executeTransaction(id: ID, wallet: &mut Wallet, ctx: &mut TxContext){
     let mut transaction_opt = extract(&mut wallet.transactions, id);
-    assert!(ctx.sender() == wallet.owner, EPermissionDenied);
     assert!(transaction_opt.is_some(), EInvalidId);
     let transaction = transaction_opt.extract();
     assert!(transaction.value <= wallet.balance.value(), ELowBalance);
@@ -92,7 +88,7 @@ public fun init_test(ctx: &mut TxContext){
         balance: balance::zero<IOTA>(),
         transactions: vector::empty<Transaction>()
     };
-    transfer::share_object(wallet);
+    transfer::public_transfer(wallet, ctx.sender());
 }
 
 public fun transactions(self: &mut Wallet): &mut vector<Transaction>{
