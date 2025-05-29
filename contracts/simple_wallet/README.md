@@ -21,11 +21,25 @@ After contract creation, the contract supports the following actions:
 
 ## Implementation
 
+### Init
+
+```move
+fun init(ctx: &mut TxContext){
+    let wallet = Wallet {
+        id: object::new(ctx),
+        owner: ctx.sender(),
+        balance: balance::zero<IOTA>(),
+        transactions: vector::empty<Transaction>()
+    };
+    transfer::public_transfer(wallet, ctx.sender());
+}
+```
+In this design, the Wallet struct is created as an owned object during initialization rather than a shared resource. This fundamental architectural choice ensures that only the wallet's owner possesses both the cryptographic keys and the actual object reference required to interact with it. Since every function that modifies the wallet must receive the Wallet object itself as an explicit parameter, the Move runtime automatically enforces strict ownership verification before any operation can execute. The wallet's existence as an exclusively owned entity means functions require no additional sender validation - the mere presence of the wallet object in the transaction serves as cryptographic proof of authorization. This approach inherently prevents unauthorized access while eliminating redundant permission checks.
+
 ### Create transaction
 
 ```move
 public fun createTransaction(recipient: address, value: u64, data: vector<u8>, wallet: &mut Wallet, ctx: &mut TxContext){
-    assert!(ctx.sender() == wallet.owner, EPermissionDenied);
     let uid = object::new(ctx);
     let transaction = Transaction {
         id: *uid.as_inner(),
@@ -51,7 +65,6 @@ The UID struct is IOTA Move's way of making sure every on-chain object has a com
 ```move
 public fun executeTransaction(id: ID, wallet: &mut Wallet, ctx: &mut TxContext){
     let mut transaction_opt = extract(&mut wallet.transactions, id);
-    assert!(ctx.sender() == wallet.owner, EPermissionDenied);
     assert!(transaction_opt.is_some(), EInvalidId);
     let transaction = transaction_opt.extract();
     assert!(transaction.value <= wallet.balance.value(), ELowBalance);
