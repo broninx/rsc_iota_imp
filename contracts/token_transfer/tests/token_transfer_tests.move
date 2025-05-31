@@ -2,7 +2,7 @@
 #[test_only]
 module token_transfer::token_transfer_tests;
 
-use token_transfer::token_transfer::{Self, Wallet};
+use token_transfer::token_transfer::{Self, Wallet, Owner};
 use iota::test_scenario::{Self as ts, Scenario};
 use iota::coin;
 use iota::iota::IOTA;
@@ -57,10 +57,10 @@ public fun unauthorized_set_receiver() {
     let mut scenario = setup();
 
     scenario.next_tx(RECEIVER);
-    let wallet = scenario.take_shared<Wallet<IOTA>>();
+    let owner = scenario.take_immutable<Owner>();
     let ctx = scenario.ctx();
-    token_transfer::set_balance_and_receiver<IOTA>(RECEIVER, wallet, ctx);
-    
+    token_transfer::set_balance_and_receiver<IOTA>(RECEIVER, &owner, ctx);
+    ts::return_immutable(owner);
     scenario.end();
 }
 

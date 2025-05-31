@@ -15,30 +15,28 @@ public struct Wallet<phantom T> has key {
     initialized: bool
 } 
 
+public struct Owner has key, store {
+    id: UID, 
+    addr: address
+  }
+
 fun init( ctx: &mut TxContext){
-    let wallet = Wallet {
+    let owner = Owner {
         id: object::new(ctx),
-        balance: balance::zero<IOTA>(),
-        owner: ctx.sender(),
-        receiver: ctx.sender(),
-        initialized: false
+        addr: ctx.sender()
     };
-    transfer::share_object(wallet);
+    transfer::public_freeze_object(owner);
 } 
 
-public fun set_balance_and_receiver<T>(receiver: address,wallet: Wallet<IOTA>, ctx: &mut TxContext){
-    assert!(!wallet.initialized, EPermissionsDenied);
-    assert!(ctx.sender() == wallet.owner, EPermissionsDenied);
-    let Wallet<IOTA> {id: uid, balance: balance, owner: owner, receiver: _, initialized: _} = wallet; 
+public fun set_balance_and_receiver<T>(receiver: address, owner: &Owner, ctx: &mut TxContext){
+    assert!(ctx.sender() == owner.addr, EPermissionsDenied);
     let wallet = Wallet<T>{
         id: object::new(ctx),
         balance: balance::zero<T>(),
-        owner: owner,
+        owner: owner.addr,
         receiver: receiver,
         initialized: true
     };
-    balance.destroy_zero();
-    object::delete(uid);
     transfer::share_object(wallet);
 }
 
@@ -63,6 +61,10 @@ public fun wallet_amount<T>(wallet: &Wallet<T>): u64 {
 }
 
 entry fun initialize(ctx: &mut TxContext){
+  let owner = Owner {
+      id: object::new(ctx),
+      addr: ctx.sender()
+    };
     let wallet = Wallet {
         id: object::new(ctx),
         balance: balance::zero<IOTA>(),
@@ -71,4 +73,5 @@ entry fun initialize(ctx: &mut TxContext){
         initialized: false
     };
     transfer::share_object(wallet);
+    transfer::public_freeze_object(owner);
 }
