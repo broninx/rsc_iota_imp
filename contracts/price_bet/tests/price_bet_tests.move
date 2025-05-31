@@ -2,7 +2,8 @@
 #[test_only]
 module price_bet::price_bet_tests;
 
-use price_bet::price_bet::{Self as pb, PriceBet, Oracle};
+use price_bet::price_bet::{Self as pb, PriceBet};
+use price_bet::oracle::{Self, Oracle};
 use iota::test_scenario::{Self as ts, Scenario};
 use iota::coin;
 use iota::iota::IOTA;
@@ -16,7 +17,7 @@ fun setup(): Scenario {
     let mut scenario = ts::begin(OWNER);
     let ctx = scenario.ctx();
     pb::init_test(ctx);
-    pb::createOracle(ORACLE, 10, ctx);
+    oracle::createOracle( ORACLE, 10, ctx);
     scenario
 }
 

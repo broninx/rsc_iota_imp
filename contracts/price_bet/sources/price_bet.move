@@ -4,6 +4,7 @@ use iota::balance::{Self, Balance};
 use iota::iota::IOTA;
 use iota::clock::Clock;
 use iota::coin::{Self, Coin};
+use price_bet::oracle::Oracle;
 
 const EPermissionDenied: u64 = 0;
 const EWrongState: u64 = 1;
@@ -15,12 +16,6 @@ const ENotWin: u64 = 5;
 const INIT: u8 = 0;
 const IDLE: u8 = 1;
 const ONGOING: u8 = 2;
-
-public struct Oracle has key, store {
-    id: UID,
-    addr: address,
-    exchange_rate: u64
-}
 
 public struct PriceBet has key {
     id: UID,
@@ -63,21 +58,12 @@ fun init(ctx: &mut TxContext) {
     transfer::share_object(price_bet);
 }
 
-public fun createOracle(addr: address, exchange_rate: u64, ctx: &mut TxContext){
-    let oracle = Oracle {
-        id: object::new(ctx),
-        addr,
-        exchange_rate
-    };
-    transfer::share_object(oracle);
-}
-
 //deadline is in minutes
 public fun initialize(initial_pot: Coin<IOTA>, oracle: &Oracle, deadline: u64, exchange_rate: u64,price_bet: &mut PriceBet, ctx: &mut TxContext){
     assert!(ctx.sender() == price_bet.owner, EPermissionDenied);
     assert!(price_bet.state == INIT, EWrongState);
     price_bet.pot.join(initial_pot.into_balance());
-    price_bet.oracle = oracle.addr;
+    price_bet.oracle = oracle.addr();
     price_bet.deadline = deadline * 60000;
     price_bet.exchange_rate = exchange_rate;
     price_bet.state = IDLE;
@@ -94,9 +80,9 @@ public fun join(coin: Coin<IOTA>, price_bet: &mut PriceBet, clock: &Clock, ctx: 
 
 public fun win(oracle: &Oracle, mut price_bet: PriceBet, clock: &Clock, ctx: &mut TxContext){
     assert!(price_bet.state == ONGOING, EWrongState);
-    assert!(price_bet.oracle == oracle.addr, EWrongOracle);
+    assert!(price_bet.oracle == oracle.addr(), EWrongOracle);
     assert!(price_bet.deadline >= clock.timestamp_ms(), EWrongTime);
-    assert!(oracle.exchange_rate > price_bet.exchange_rate, ENotWin);
+    assert!(oracle.exchange_rate() > price_bet.exchange_rate, ENotWin);
     let value = price_bet.pot.value();
     let coin = coin::take(&mut price_bet.pot, value, ctx);
     let recipient = price_bet.player;
