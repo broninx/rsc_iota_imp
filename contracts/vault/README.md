@@ -22,29 +22,33 @@ Once the vault contract have been created, it supports the following actions:
 
 ## Implementation
 
-### Initialize
+### Initialization
 
 ```move
-public fun initialize<T>(recovery_key: vector<u8>, wait_time: u64, vault: Vault<IOTA>, ctx: &mut TxContext){
-    assert!(vault.state == INIT, EPermissionDenied);
-    assert!(ctx.sender() == vault.owner, EPermissionDenied);
-    let Vault {
-        id: id,
-        owner: owner,
-        receiver: receiver,
-        amount: old_balance,
-        withdrawal_amount: _,
-        recovery_key: _,
-        wait_time: _,
-        deadline: _,
-        state: _
-    } = vault;
-    old_balance.destroy_zero();
-    object::delete(id);
+fun init(ctx: &mut TxContext){
+    let owner = Owner {
+        id: object::new(ctx),
+        addr: ctx.sender()
+      };
+    transfer::share_object(owner);
+}
+```
+
+This use case implements an alternative contract initialization method. A struct Owner stores the contract owner's address. During deployment:
+1. An Owner instance is created,
+2. The deployer's (sender's) address is saved as the owner
+3. The Owner instance is persisted on-chain
+
+Subsequently, only this owner may call the initialize function.
+
+```move
+public fun initialize<T>(recovery_key: vector<u8>, wait_time: u64, owner: Owner, ctx: &mut TxContext){
+    assert!(ctx.sender() == owner.addr, EPermissionDenied);
+    let Owner {id: id, addr: owner} = owner;
     let vault = Vault<T> {
         id: object::new(ctx),
         owner: owner,
-        receiver: receiver,
+        receiver: @0x0,
         amount: balance::zero<T>(),
         withdrawal_amount: 0,
         recovery_key: recovery_key,
@@ -52,10 +56,11 @@ public fun initialize<T>(recovery_key: vector<u8>, wait_time: u64, vault: Vault<
         deadline: 0,
         state: READY
     };
+    id.delete();
     transfer::share_object(vault);
 }
 ```
-In Move's type system, `Vault<IOTA>` and `Vault<T>` are fundamentally distinct types, making it impossible to modify an existing object's generic type parameter in-place. This design preserves Move's strict type safety guarantees and maintains object identity integrity within IOTA's framework. To transition between token types, the original `Vault<IOTA>` must be fully unpacked and destroyed, after which a new `Vault<T>` instance is created with a fresh object ID. This recreation process allows for the desired token type transition while preserving non-generic fields like `owner` and `receiver`, and simultaneously enables the configuration of new parameters such as `recovery_keys` and `wait_time`. The destruction-and-recreation pattern ensures that all type-dependent state (particularly token balances) is properly reinitialized under the new type regime, maintaining the language's security invariants while enabling flexible token system design.
+The `initialize` function accepts all required configuration parameters - including `recovery_key`, `wait_time`, and `owner`. Within this function, the `owner` parameter is intentionally destroyed (consumed) after its address is stored in a new Vault struct instance. This vault structure, now containing all validated configuration parameters, is subsequently shared on-chain. This is design ensures only a single vault instance can ever be created.
 
 ## Differeces
 
