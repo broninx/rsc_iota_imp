@@ -20,34 +20,42 @@ any amount of the token deposited in the contract.
   
 ## Implementation
 
-The token transfer implementation shares the core structure of [simple transfer](https://github.com/broninx/rsc_iota_imp/tree/main/contracts/simple_transfer) but introduces a critical enhancement: a generic type system that extends support to any token type rather than being restricted to IOTA. This modification requires the sender to specify both the recipient address and the token type, which is why the function evolved from set_receiver to set_balance_and_receiver.
+The token transfer implementation shares the core structure of [simple transfer](https://github.com/broninx/rsc_iota_imp/tree/main/contracts/simple_transfer) but introduces a critical enhancement: a generic type system that extends support to any token type rather than being restricted to IOTA. This modification requires the sender to specify both the recipient address and the token type, which is why the function evolved from set_receiver to createWallet directly.
 
-### set_balance_and_receiver
+In deployment time we save the owner of the contract in it:
 
 ```move
-public fun set_balance_and_receiver<T>(receiver: address,wallet: Wallet<IOTA>, ctx: &mut TxContext){
-    assert!(!wallet.initialized, EPermissionsDenied);
-    assert!(ctx.sender() == wallet.owner, EPermissionsDenied);
-    let Wallet<IOTA> {id: uid, balance: balance, owner: owner, receiver: _, initialized: _} = wallet; 
+fun init( ctx: &mut TxContext){
+    let owner = Owner {
+        id: object::new(ctx),
+        addr: ctx.sender()
+    };
+    transfer::public_freeze_object(owner);
+} 
+```
+
+### Create Wallet
+
+```move
+public fun createWallet<T>(receiver: address, owner: &Owner, ctx: &mut TxContext){
+    assert!(ctx.sender() == owner.addr, EPermissionsDenied);
     let wallet = Wallet<T>{
         id: object::new(ctx),
         balance: balance::zero<T>(),
-        owner: owner,
+        owner: owner.addr,
         receiver: receiver,
         initialized: true
     };
-    balance.destroy_zero();
-    object::delete(uid);
     transfer::share_object(wallet);
 }
 ```
 
-The set_balance_and_receiver function accepts three inputs:
+The createWallet function accepts three inputs:
 1. The recipient’s address
-2. The wallet instance shared in the smart contract
+2. The owner instance shared in the smart contract
 3. The transaction context
 
-First, it verifies that the `initialized` flag is set to `true` and confirms the transaction sender is the authorized owner of the wallet. If both checks succeed, the function decommissions the original wallet (created during contract deployment) and dynamically generates a replacement wallet. This new wallet retains the original owner but updates the `balance` to reflect the token type specified in the function call, assigns the provided `receiver` address, and resets the `initialized` flag to true. Finally, the system destroys the IOTA token balance and the unique identifier ([UID](https://docs.iota.org/developer/iota-101/objects/uid-id)) of the old wallet and publishes the updated wallet to the contract.
+First, it verifies that the transaction sender is the authorized owner of the wallet. If the check succeed, the function generates a wallet with all parameter passed as field of it.
 
 ## Implementation differences
 
