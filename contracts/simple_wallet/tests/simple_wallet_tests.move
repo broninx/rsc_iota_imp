@@ -35,7 +35,7 @@ fun create_test(amount: u64, sender: address, mut scenario: Scenario): (Scenario
     let ctx = scenario.ctx();
     sw::createTransaction(RECIPIENT, amount, b"gift", &mut wallet, ctx);
     let transactions = wallet.transactions();
-    let id = sw::id(transactions, transactions.length()-1);
+    let id = sw::id(transactions, transactions.keys().length()-1);
     ts::return_to_address(sender, wallet);
     (scenario, id)
 }
