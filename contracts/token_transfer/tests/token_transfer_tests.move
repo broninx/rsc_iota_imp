@@ -59,7 +59,7 @@ public fun unauthorized_set_receiver() {
     scenario.next_tx(RECEIVER);
     let owner = scenario.take_immutable<Owner>();
     let ctx = scenario.ctx();
-    token_transfer::set_balance_and_receiver<IOTA>(RECEIVER, &owner, ctx);
+    token_transfer::createWallet<IOTA>(RECEIVER, &owner, ctx);
     ts::return_immutable(owner);
     scenario.end();
 }

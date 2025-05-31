@@ -28,7 +28,7 @@ fun init( ctx: &mut TxContext){
     transfer::public_freeze_object(owner);
 } 
 
-public fun set_balance_and_receiver<T>(receiver: address, owner: &Owner, ctx: &mut TxContext){
+public fun createWallet<T>(receiver: address, owner: &Owner, ctx: &mut TxContext){
     assert!(ctx.sender() == owner.addr, EPermissionsDenied);
     let wallet = Wallet<T>{
         id: object::new(ctx),
