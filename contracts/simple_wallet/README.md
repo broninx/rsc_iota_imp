@@ -29,7 +29,7 @@ fun init(ctx: &mut TxContext){
         id: object::new(ctx),
         owner: ctx.sender(),
         balance: balance::zero<IOTA>(),
-        transactions: vector::empty<Transaction>()
+        transactions: vec_map::empty<ID, Transaction>()
     };
     transfer::public_transfer(wallet, ctx.sender());
 }
@@ -42,12 +42,11 @@ In this design, the Wallet struct is created as an owned object during initializ
 public fun createTransaction(recipient: address, value: u64, data: vector<u8>, wallet: &mut Wallet, ctx: &mut TxContext){
     let uid = object::new(ctx);
     let transaction = Transaction {
-        id: *uid.as_inner(),
         recipient: recipient,
         value: value,
         data: data
     };
-    wallet.transactions.push_back(transaction);
+    wallet.transactions.insert(*uid.as_inner(), transaction);
     object::delete(uid);
 }
 ```
@@ -64,31 +63,17 @@ The UID struct is IOTA Move's way of making sure every on-chain object has a com
 
 ```move
 public fun executeTransaction(id: ID, wallet: &mut Wallet, ctx: &mut TxContext){
-    let mut transaction_opt = extract(&mut wallet.transactions, id);
+    let mut transaction_opt = wallet.transactions.try_get(&id);
     assert!(transaction_opt.is_some(), EInvalidId);
     let transaction = transaction_opt.extract();
     assert!(transaction.value <= wallet.balance.value(), ELowBalance);
-
+    wallet.transactions.remove(&id);
     let coin = coin::take(&mut wallet.balance, transaction.value, ctx);
     transfer::public_transfer(coin, transaction.recipient);
 }
 ```
 The executeTransaction function enables wallet owners to process pending transactions by specifying a transaction ID. It works by:
-1. Using the extract function to locate and retrieve the specific transaction from the wallet's transaction queue
-```move
-fun extract(transactions: &mut vector<Transaction>, id: ID): Option<Transaction>{
-    let mut i = 0;
-    let mut transaction = option::none();
-    while( i < transactions.length<Transaction>() ){
-        if (transactions[i].id == id){
-            transaction = option::some(transactions.remove<Transaction>(i));
-            break
-        };
-        i = i + 1;
-    };
-    transaction
-} 
-```
+1. Retrieve the specific transaction from the wallet's transaction queue
 2. Verifying two critical conditions:
    - The transaction exists
    - The wallet balance is sufficient to cover the transfer amount
