@@ -2,13 +2,11 @@
 #[test_only]
 module vault::vault_tests;
 
-use vault::vault::{Self, Vault};
+use vault::vault::{Self, Vault, Owner};
 use iota::iota::IOTA;
 use iota::test_scenario::{Self as ts, Scenario};
 use iota::coin;
 use iota::clock::{Self, Clock};
-
-const EEmptyInventory: u64 = 5;
 
 const OWNER: address = @0xCAFE;
 const USER: address = @0xFACE;
@@ -22,10 +20,9 @@ fun setup(): Scenario {
 
 fun initialize_test(sender: address, mut scenario: Scenario): Scenario{
     ts::next_tx(&mut scenario, sender);
-    assert!(ts::has_most_recent_shared<Vault<IOTA>>(), EEmptyInventory);
-    let vault = ts::take_shared<Vault<IOTA>>(&scenario);
-    let ctx = ts::ctx(&mut scenario);
-    vault::initialize<IOTA>(b"abcd1234", 60, vault, ctx);
+    let owner = scenario.take_shared<Owner>();
+    let ctx = scenario.ctx();
+    vault::initialize<IOTA>(b"abcd1234", 60, owner, ctx);
     scenario
 }
 
@@ -76,7 +73,7 @@ public fun initended_way_finalize(){
     let scenario = finalize_test(OWNER, &clock, scenario);
 
     clock.destroy_for_testing();
-    ts::end(scenario);
+    scenario.end();
 }
 
 #[test]

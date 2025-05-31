@@ -3,7 +3,6 @@ module vault::vault;
 
 use iota::coin::{Self, Coin};
 use iota::balance::{Self, Balance};
-use iota::iota::IOTA;
 use iota::clock::Clock;
 
 const EPermissionDenied: u64 = 0;
@@ -15,6 +14,11 @@ const ELowBalance:u64 = 4;
 const INIT: u8 = 0;
 const READY: u8 = 1; 
 const ONGOING: u8 = 2;
+
+public struct Owner has key, store {
+    id: UID,
+    addr: address
+}
 
 public struct Vault<phantom T> has key {
     id: UID,
@@ -29,41 +33,21 @@ public struct Vault<phantom T> has key {
 }
 
 fun init(ctx: &mut TxContext){
-    let vault = Vault {
+    let owner = Owner {
         id: object::new(ctx),
-        owner: ctx.sender(),
-        receiver: @0x0,
-        amount: balance::zero<IOTA>(),
-        withdrawal_amount: 0,
-        recovery_key: b"",
-        wait_time: 0,
-        deadline: 0,
-        state: INIT
-    };
-    transfer::share_object(vault);
+        addr: ctx.sender()
+      };
+    transfer::share_object(owner);
 }
 
 // wait_time is in seconds
-public fun initialize<T>(recovery_key: vector<u8>, wait_time: u64, vault: Vault<IOTA>, ctx: &mut TxContext){
-    assert!(vault.state == INIT, EPermissionDenied);
-    assert!(ctx.sender() == vault.owner, EPermissionDenied);
-    let Vault {
-        id: id,
-        owner: owner,
-        receiver: receiver,
-        amount: old_balance,
-        withdrawal_amount: _,
-        recovery_key: _,
-        wait_time: _,
-        deadline: _,
-        state: _
-    } = vault;
-    old_balance.destroy_zero();
-    object::delete(id);
+public fun initialize<T>(recovery_key: vector<u8>, wait_time: u64, owner: Owner, ctx: &mut TxContext){
+    assert!(ctx.sender() == owner.addr, EPermissionDenied);
+    let Owner {id: id, addr: owner} = owner;
     let vault = Vault<T> {
         id: object::new(ctx),
         owner: owner,
-        receiver: receiver,
+        receiver: @0x0,
         amount: balance::zero<T>(),
         withdrawal_amount: 0,
         recovery_key: recovery_key,
@@ -71,6 +55,7 @@ public fun initialize<T>(recovery_key: vector<u8>, wait_time: u64, vault: Vault<
         deadline: 0,
         state: READY
     };
+    id.delete();
     transfer::share_object(vault);
 }
 
@@ -113,16 +98,9 @@ public fun cancel<T>(recovery_key: vector<u8>, vault: &mut Vault<T>, clock: &Clo
 
 #[test_only]
 public fun init_test(ctx: &mut TxContext) {
-    let vault = Vault {
+    let owner = Owner {
         id: object::new(ctx),
-        owner: ctx.sender(),
-        receiver: @0x0,
-        amount: balance::zero<IOTA>(),
-        withdrawal_amount: 0,
-        recovery_key: b"",
-        wait_time: 0,
-        deadline: 0,
-        state: INIT
+        addr: ctx.sender()
     };
-    transfer::share_object(vault);
+    transfer::share_object(owner);
 }
