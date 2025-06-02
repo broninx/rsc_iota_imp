@@ -4,8 +4,9 @@ use iota::vec_map::{Self, VecMap};
 use iota::balance::{Self, Balance};
 use iota::coin::{Self, Coin};
 
-const EWrongSharesDistibution: u64 = 0;
-const EPermissionDenied: u64 = 0;
+const EWrongSharesDistribution: u64 = 0;
+const EPermissionDenied: u64 = 1;
+const EBalanceEmpty: u64 = 2;
 
 public struct Owner has key {
     id: UID,
@@ -34,7 +35,7 @@ fun init(ctx: &mut TxContext) {
 
 public fun initialize<T>(shareolders: vector<address>, shares: vector<u64>, owner: Owner, ctx: &mut TxContext){
     assert!(ctx.sender() == owner.addr, EPermissionDenied);
-    assert!(shareolders.length() == shares.length(), EWrongSharesDistibution);
+    assert!(shareolders.length() == shares.length(), EWrongSharesDistribution);
 
     let Owner {id: id, addr: _} = owner;
     let mut shares_tot = 0;
@@ -46,7 +47,6 @@ public fun initialize<T>(shareolders: vector<address>, shares: vector<u64>, owne
         vecmap_shareholders.insert(shareolders[i], shareolder);
         i = i + 1;
     };
-
     let payment_splitter = PaymentSplitter {
         id: object::new(ctx),
         shareholders: vecmap_shareholders,
@@ -63,6 +63,7 @@ public fun receive<T>(coin: Coin<T>, payment_splitter: &mut PaymentSplitter<T>){
 }
 
 public fun release<T>(payment_splitter: &mut PaymentSplitter<T>){
+    assert!(payment_splitter.balance.value() > 0, EBalanceEmpty);
     let balance = &mut payment_splitter.balance;
     let balance_amount_per_share = balance.value() / payment_splitter.shares_tot;
     let mut i = 0;
@@ -90,3 +91,7 @@ public fun init_test(ctx: &mut TxContext) {
     };
     transfer::share_object(owner);
 }
+
+public fun balance<T>(self: &PaymentSplitter<T>): &Balance<T>{
+    &self.balance
+  }
