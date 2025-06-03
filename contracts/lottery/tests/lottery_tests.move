@@ -41,20 +41,20 @@ fun redeem_commit_test(sender: address, clock: &Clock, mut scenario: Scenario){
     scenario.end();
 }
 
-fun end_reveal1_test(sender: address, secret: vector<u8>, clock: &Clock, mut scenario: Scenario): Scenario{
+fun reveal1_test(sender: address, secret: vector<u8>, clock: &Clock, mut scenario: Scenario): Scenario{
     scenario.next_tx(sender);
     let mut lottery = scenario.take_shared<Lottery<IOTA>>();
     let ctx = scenario.ctx();
-    lottery::end_reveal1(secret, clock, &mut lottery, ctx);
+    lottery::reveal1(secret, clock, &mut lottery, ctx);
     ts::return_shared(lottery);
     scenario
 }
 
-fun end_reveal2_test(sender: address, secret: vector<u8>, clock: &Clock, mut scenario: Scenario): Scenario{
+fun reveal2_test(sender: address, secret: vector<u8>, clock: &Clock, mut scenario: Scenario): Scenario{
     scenario.next_tx(sender);
     let mut lottery = scenario.take_shared<Lottery<IOTA>>();
     let ctx = scenario.ctx();
-    lottery::end_reveal2(secret, clock, &mut lottery, ctx);
+    lottery::reveal2(secret, clock, &mut lottery, ctx);
     ts::return_shared(lottery);
     scenario
 }
@@ -84,8 +84,8 @@ public fun intended_way_win(){
     let ( scenario, clock) = join1_test();
     let hash = keccak256(&b"world");
     let scenario = join2_test(1000, hash, &clock, scenario);
-    let scenario = end_reveal1_test(PLAYER1, b"hello", &clock, scenario);
-    let scenario = end_reveal2_test(PLAYER2, b"world", &clock, scenario);
+    let scenario = reveal1_test(PLAYER1, b"hello", &clock, scenario);
+    let scenario = reveal2_test(PLAYER2, b"world", &clock, scenario);
     clock.destroy_for_testing();
     win_test(scenario);
 }
@@ -96,7 +96,7 @@ public fun intended_way_redeem_palyer1(){
     increment(&mut clock, 5);
     let hash = keccak256(&b"world");
     let scenario = join2_test(1000, hash, &clock, scenario);
-    let scenario = end_reveal1_test(PLAYER1, b"hello", &clock, scenario);
+    let scenario = reveal1_test(PLAYER1, b"hello", &clock, scenario);
     increment(&mut clock, 11);
     redeem_test(PLAYER1, &clock, scenario);
     clock.destroy_for_testing();
@@ -162,7 +162,7 @@ public fun incorrect_secret_reveal1(){
     increment(&mut clock, 5);
     let hash = keccak256(&b"world");
     let scenario = join2_test(1000, hash, &clock, scenario);
-    let scenario = end_reveal1_test(PLAYER1, b"hell", &clock, scenario);
+    let scenario = reveal1_test(PLAYER1, b"hell", &clock, scenario);
     clock.destroy_for_testing();
     scenario.end();
 }
@@ -173,7 +173,7 @@ public fun time_expired_reveal1(){
     let hash = keccak256(&b"world");
     let scenario = join2_test(1000, hash, &clock, scenario);
     increment(&mut clock, 11);
-    let scenario = end_reveal1_test(PLAYER1, b"hello", &clock, scenario);
+    let scenario = reveal1_test(PLAYER1, b"hello", &clock, scenario);
     clock.destroy_for_testing();
     scenario.end();
 }
@@ -184,8 +184,8 @@ public fun incorrect_secret_reveal2(){
     increment(&mut clock, 5);
     let hash = keccak256(&b"world");
     let scenario = join2_test(1000, hash, &clock, scenario);
-    let scenario = end_reveal1_test(PLAYER1, b"hello", &clock, scenario);
-    let scenario = end_reveal2_test(PLAYER2, b"word", &clock, scenario);
+    let scenario = reveal1_test(PLAYER1, b"hello", &clock, scenario);
+    let scenario = reveal2_test(PLAYER2, b"word", &clock, scenario);
     clock.destroy_for_testing();
     scenario.end();
 }
@@ -195,9 +195,9 @@ public fun time_expired_reveal2(){
     let ( scenario, mut clock) = join1_test();
     let hash = keccak256(&b"world");
     let scenario = join2_test(1000, hash, &clock, scenario);
-    let scenario = end_reveal1_test(PLAYER1, b"hello", &clock, scenario);
+    let scenario = reveal1_test(PLAYER1, b"hello", &clock, scenario);
     increment(&mut clock, 11);
-    let scenario = end_reveal2_test(PLAYER2, b"world", &clock, scenario);
+    let scenario = reveal2_test(PLAYER2, b"world", &clock, scenario);
     clock.destroy_for_testing();
     scenario.end();
 }
@@ -207,7 +207,7 @@ public fun time_not_expired_redeem_palyer1(){
     let ( scenario, clock) = join1_test();
     let hash = keccak256(&b"world");
     let scenario = join2_test(1000, hash, &clock, scenario);
-    let scenario = end_reveal1_test(PLAYER1, b"hello", &clock, scenario);
+    let scenario = reveal1_test(PLAYER1, b"hello", &clock, scenario);
     redeem_test(PLAYER1, &clock, scenario);
     clock.destroy_for_testing();
 }
@@ -217,7 +217,7 @@ public fun sender_not_palyer1_redeem(){
     let ( scenario, mut clock) = join1_test();
     let hash = keccak256(&b"world");
     let scenario = join2_test(1000, hash, &clock, scenario);
-    let scenario = end_reveal1_test(PLAYER1, b"hello", &clock, scenario);
+    let scenario = reveal1_test(PLAYER1, b"hello", &clock, scenario);
     increment(&mut clock, 11);
     redeem_test(PLAYER2, &clock, scenario);
     clock.destroy_for_testing();

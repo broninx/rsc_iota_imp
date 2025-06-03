@@ -88,7 +88,7 @@ public fun redeem_commit<T>(clock: &Clock, lottery: Lottery<T>, ctx: &mut TxCont
 
 }
 
-public fun end_reveal1<T>(secret: vector<u8>, clock: &Clock, lottery: &mut Lottery<T>, ctx: &mut TxContext){
+public fun reveal1<T>(secret: vector<u8>, clock: &Clock, lottery: &mut Lottery<T>, ctx: &mut TxContext){
     assert!(lottery.state == JOIN2, EWrongState);
     assert!(lottery.player1 == ctx.sender(), EPermissionDenied);
     assert!(lottery.end_reveal1 >= clock.timestamp_ms(), ETimeExpired);
@@ -98,7 +98,7 @@ public fun end_reveal1<T>(secret: vector<u8>, clock: &Clock, lottery: &mut Lotte
     lottery.end_reveal2 = 600000 + clock.timestamp_ms();
 }
 
-public fun end_reveal2<T>(secret: vector<u8>, clock: &Clock, lottery: &mut Lottery<T>, ctx: &mut TxContext){
+public fun reveal2<T>(secret: vector<u8>, clock: &Clock, lottery: &mut Lottery<T>, ctx: &mut TxContext){
     assert!(lottery.state == REVEAL1, EWrongState);
     assert!(lottery.player2 == ctx.sender(), EPermissionDenied);
     assert!(lottery.end_reveal2 >= clock.timestamp_ms(), ETimeExpired);
