@@ -17,6 +17,7 @@ A set of use cases with tests taken from [rosetta-smart-contracts](https://githu
 11. [Simple wallet](contracts/simple_wallet)
 12. [Price bet](contracts/price_bet)
 13. [Payment splitter](contracts/payment_splitter)
+14. [Lottery](contracts/lottery)
 
 ## Installation
 
