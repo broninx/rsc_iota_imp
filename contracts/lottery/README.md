@@ -30,3 +30,38 @@ If the platform does not support multisig transactions, then step 1 is split in 
 - Hash on arbitrary messages
 - Bitstring operations
 - **Randomness**
+
+## Implementation 
+
+```move
+public fun join1<T>(deadline_commit: u64, coin: Coin<T>, hash: vector<u8>, clock: &Clock, ctx: &mut TxContext){
+    let lottery = Lottery{
+        id: object::new(ctx),
+        player1: ctx.sender(),
+        player2: @0x0,
+        hash1: hash,
+        hash2: b"",
+        end_commit: (deadline_commit * 60000) + clock.timestamp_ms(),
+        end_reveal1: 0,
+        end_reveal2: 0,
+        balance: coin.into_balance(),
+        state: JOIN1
+    };
+    transfer::share_object(lottery);
+}
+```
+
+The lottery participation process requires a two-step design. First, the join function initializes the lottery by creating a Lottery struct, recording the sender's address in the player1 field. Simultaneously, it calculates a commitment deadline (end_commit) by taking the current timestamp and adding a 10-minute window. If any subsequent caller triggers the join2 function before this end_commit expiration, the original player (player1) gains the ability to invoke redeem_commit. This function allows player1 to reclaim their staked funds and permanently deletes the lottery entry, ensuring recovery when the second participant fails to join within the allotted timeframe.
+
+```move
+public fun redeem_commit<T>(clock: &Clock, lottery: Lottery<T>, ctx: &mut TxContext){
+    assert!(lottery.state == JOIN1, EWrongState);
+    assert!(lottery.end_commit < clock.timestamp_ms(), ETimeNotExpired);
+    assert!(lottery.player1 == ctx.sender(), EPermissionDenied);
+
+    let player1 = lottery.player1;
+    let balance = lottery.destroy();
+    transfer::public_transfer(coin::from_balance(balance, ctx), player1);
+
+}
+```
