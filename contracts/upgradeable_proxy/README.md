@@ -28,7 +28,3 @@ with the address of the Caller contract as an argument.  
 - Contract-to-contract call
 - Delegate call
 - Dynamic arrays
-
-## Implementation
-
-Due to IOTA Move's architecture, user balances cannot be determined from addresses alone, preventing this use case.
