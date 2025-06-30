@@ -8,6 +8,10 @@ module bet::bet;
   const EWinnerNotPlayer: u64  = 1;
   const EPermissionDenied: u64  = 2;
   const ETimeIsNotFinish: u64 = 3;
+  const EWrongAmount: u64 = 4;
+  
+  const JOIN2: u8 = 0;
+  const ONGOING: u8 = 1;
     
   public struct Oracle has key, store {
     id: UID,
@@ -21,14 +25,15 @@ module bet::bet;
     player1: address,
     player2: address,
     oracle: address,
-    timeout: u64
+    timeout: u64,
+    state: u8
   }
 
   fun init(ctx: &mut TxContext){
     let oracle = Oracle {
       id: object::new(ctx),
       addr: ctx.sender(),
-      deadline: 0 // 10 min
+      deadline: 0 
     };
     transfer::share_object(oracle);
   }
@@ -38,11 +43,8 @@ module bet::bet;
     oracle.deadline = deadline;
   }
 
-  public fun join<T> (
-    clock: &Clock, 
+  public fun join1<T> (
     wager: coin::Coin<T>,
-    p1: address, 
-    p2: address, 
     oracle: &Oracle,
     ctx: &mut TxContext
     ){
@@ -50,20 +52,36 @@ module bet::bet;
         let bet = Bet<T>{
           id: object::new(ctx),
           amount: wager,
-          player1: p1,
-          player2: p2,
+          player1: ctx.sender(),
+          player2: @0x0,
           oracle: oracle.addr,
-          timeout: clock.timestamp_ms() + oracle.deadline 
+          timeout: oracle.deadline,
+          state: JOIN2
         };
         transfer::share_object(bet);
-    }
-  
+  }
+
+  public fun join2<T> (
+    clock: &Clock,
+    wager: coin::Coin<T>,
+    bet: &mut Bet<T>,
+    ctx: &mut TxContext
+    ){
+        assert!(bet.state == JOIN2, EPermissionDenied);
+        assert!(wager.value() == bet.amount.value(), EWrongAmount);
+        let wager = wager.into_balance();
+        bet.amount.join(wager);      
+        bet.player2 = ctx.sender();
+        bet.timeout = bet.timeout + clock.timestamp_ms();
+        bet.state = ONGOING
+  }
+
   public fun win<T> (bet: Bet<T>, winner: address, clock: &Clock, ctx: &mut TxContext) {
     assert!(clock.timestamp_ms() < bet.timeout, EOverTimeLimit);
     assert!(winner == bet.player1 || winner == bet.player2, EWinnerNotPlayer);
     assert!(bet.oracle == ctx.sender(), EPermissionDenied);
 
-    let Bet {id: id,amount: wager, player1: _, player2: _,oracle: _, timeout: _} = bet;
+    let Bet {id: id,amount: wager, player1: _, player2: _,oracle: _, timeout: _, state: _} = bet;
     let wager = coin::from_balance(wager, ctx);
     transfer::public_transfer(wager, winner);
 
@@ -72,7 +90,7 @@ module bet::bet;
   
   public fun timeout<T> (bet: Bet<T>, clock: &Clock, ctx: &mut TxContext){
     assert!(clock.timestamp_ms() > bet.timeout, ETimeIsNotFinish);
-    let Bet {id: id, amount:mut wager, player1: p1, player2: p2,oracle: _, timeout: _} = bet;
+    let Bet {id: id, amount:mut wager, player1: p1, player2: p2,oracle: _, timeout: _, state: _} = bet;
     id.delete();
     let amount = wager.value();
 
