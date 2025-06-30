@@ -77,6 +77,7 @@ module bet::bet;
   }
 
   public fun win<T> (bet: Bet<T>, winner: address, clock: &Clock, ctx: &mut TxContext) {
+    assert!(bet.state == ONGOING, EPermissionDenied);
     assert!(clock.timestamp_ms() < bet.timeout, EOverTimeLimit);
     assert!(winner == bet.player1 || winner == bet.player2, EWinnerNotPlayer);
     assert!(bet.oracle == ctx.sender(), EPermissionDenied);
@@ -89,6 +90,7 @@ module bet::bet;
   }
   
   public fun timeout<T> (bet: Bet<T>, clock: &Clock, ctx: &mut TxContext){
+    assert!(bet.state == ONGOING, EPermissionDenied);
     assert!(clock.timestamp_ms() > bet.timeout, ETimeIsNotFinish);
     let Bet {id: id, amount:mut wager, player1: p1, player2: p2,oracle: _, timeout: _, state: _} = bet;
     id.delete();
