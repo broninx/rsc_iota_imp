@@ -91,45 +91,69 @@ To set the deadline the Oracle can use the `initialize` function:
 ```
 #### Join
 
-The `Join` function enables the participation of two users in a mutually agreed wager.
+The `join1` function enables a user to create a bet struct by specifying a wager amount and publish it on the blockchain. This initiates a pending state awaiting counterparty participation. A second user may then join the existing bet by invoking `join2`, which requires passing the identical wager amount originally specified in the bet struct.
 
 ```move
-public fun join<T> (
-    clock: &Clock, 
+public fun join1<T> (
     wager: coin::Coin<T>,
-    p1: address, 
-    p2: address, 
     oracle: &Oracle,
     ctx: &mut TxContext
     ){
-        let wager = coin::into_balance(wager);
+        let wager = wager.into_balance();
         let bet = Bet<T>{
           id: object::new(ctx),
           amount: wager,
-          player1: p1,
-          player2: p2,
+          player1: ctx.sender(),
+          player2: @0x0,
           oracle: oracle.addr,
-          timeout: timestamp_ms(clock) + oracle.deadline 
+          timeout: oracle.deadline,
+          state: JOIN2
         };
         transfer::share_object(bet);
-    }
+  }
 ```
 
-To call the `join` function we require six parameters to be passed to the contract:
+To call the `join1` function has required three parameters to be passed to the contract:
 
-- **clock**: [Clock struct](https://docs.iota.org/references/framework/testnet/iota-framework/clock#0x2_clock_Clock) is a Singleton shared object that exposes time to Move calls. This object can only be read (accessed via an immutable reference) by entry functions. We need it to take the timestamp to record the initiation time of the wager;
+
 - **wager**: a [coin](https://docs.iota.org/references/framework/iota-framework/coin) that enable participants to commit either the network’s native token or externally-defined fungible tokens;
-- **p1 & p2**: two distinct addresses uniquely identify the counterparties involved in the wager;
 - **oracle**: the oracle that decide the winner of the wager;
 - **ctx**: [the transaction context](https://docs.iota.org/references/framework/testnet/iota-framework/tx_contex)
 
 The function instantiates an bet, which is subsequently shared across the system via the [share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function get accessible the bet instance for reads and writes by any transaction.
+
+```move
+public fun join2<T> (
+    clock: &Clock,
+    wager: coin::Coin<T>,
+    bet: &mut Bet<T>,
+    ctx: &mut TxContext
+    ){
+        assert!(bet.state == JOIN2, EPermissionDenied);
+        assert!(wager.value() == bet.amount.value(), EWrongAmount);
+        let wager = wager.into_balance();
+        bet.amount.join(wager);      
+        bet.player2 = ctx.sender();
+        bet.timeout = bet.timeout + clock.timestamp_ms();
+        bet.state = ONGOING
+  }
+```
+
+To call the `join2` function instead we require four parameters to be passed to the contract:
+
+- **clock**: [Clock struct](https://docs.iota.org/references/framework/testnet/iota-framework/clock#0x2_clock_Clock) is a Singleton shared object that exposes time to Move calls. This object can only be read (accessed via an immutable reference) by entry functions. We need it to take the timestamp to record the initiation time of the wager;
+- **wager**: just explained;
+- **bet**: the structure that persists on-chain in a JOIN2 state, awaiting counterparty participation. Successful execution of the join2 function triggers a state transition that activates the oracle for winner determination;
+- ctx: [the transaction context](https://docs.iota.org/references/framework/testnet/iota-framework/tx_contex).
+
+The function first validates two preconditions: (1) the bet's current state equals `JOIN2`, and (2) the caller's wager amount matches the creator's initial wager. Upon validation, it aggregates both wagers by converting coins to a balance structure via the `coin::into_balance()` method. The bet struct is then updated with the second participant's address, a countdown timer initiates, and the state transitions to `ONGOING`, enabling oracle to chose the winner.
 
 #### Win
 After both players have joined the bet, the oracle is expected to determine the winner, calling the function `win`, who receives the whole pot.
 
 ```move
 public fun win<T> (bet: Bet<T>, winner: address, clock: &Clock, ctx: &mut TxContext) {
+    assert!(bet.state == ONGOING, EPermissionDenied);
     assert!(timestamp_ms(clock) < bet.timeout, EOverTimeLimit);
     assert!(winner == bet.player1 || winner == bet.player2, EWinnerNotPlayer);
     assert!(bet.oracle == ctx.sender(), EPermissionDenied);
@@ -160,6 +184,7 @@ Upon successful validation of all assertions, the function initiates the bet res
 
 ```move
   public fun timeout<T> (bet: Bet<T>, clock: &Clock, ctx: &mut TxContext){
+    assert!(bet.state == ONGOING, EPermissionDenied);
     assert!(clock.timestamp_ms() > bet.timeout, ETimeIsNotFinish);
     let Bet {id: id, amount:mut wager, player1: p1, player2: p2,oracle: _, timeout: _} = bet;
     object::delete(id);
