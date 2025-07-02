@@ -29,18 +29,13 @@ module bet::bet;
     state: u8
   }
 
-  fun init(ctx: &mut TxContext){
+  public fun initialize(deadline: u64, ctx: &mut TxContext){
     let oracle = Oracle {
       id: object::new(ctx),
       addr: ctx.sender(),
-      deadline: 0 
+      deadline: deadline 
     };
     transfer::share_object(oracle);
-  }
-
-  public fun initialize(deadline: u64, oracle: &mut Oracle, ctx: &mut TxContext){
-    assert!(ctx.sender() == oracle.addr, EPermissionDenied);
-    oracle.deadline = deadline;
   }
 
   public fun join1<T> (
@@ -104,11 +99,11 @@ module bet::bet;
 
 #[test_only]
 
-public fun init_test(ctx: &mut TxContext){
+public fun init_test(deadline: u64, ctx: &mut TxContext){
     let oracle = Oracle {
       id: object::new(ctx),
       addr: tx_context::sender(ctx),
-      deadline: 600000 // 10 min
+      deadline: deadline // 10 min
     };
     transfer::share_object(oracle);
 }

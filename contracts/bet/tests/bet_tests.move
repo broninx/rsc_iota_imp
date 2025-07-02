@@ -18,7 +18,7 @@ module bet::bet_tests {
     public fun setup(): Scenario{
         let mut scenario = ts::begin(ORACLE);
         let ctx = scenario.ctx();
-        bet::init_test(ctx); 
+        bet::init_test(600000, ctx); 
         scenario
     }
 
