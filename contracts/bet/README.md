@@ -63,32 +63,17 @@ The first field of Bet and Oracle is the id. [UID](https://docs.iota.org/referen
 
 #### Initialization
 
-In Move, the [init](https://docs.iota.org/developer/iota-101/move-overview/init) function plays a critical role during the module's lifecycle, executing only once at the moment of module publication. To ensure proper usage, the init function must conform to specific criteria:
-- **Function Name**: The function must be named init.
-- **Parameter List**: The last parameter must be of type &mut TxContext or &TxContext(in [TxContext struct](https://docs.iota.org/references/framework/testnet/iota-framework/tx_context#0x2_tx_context_TxContext) are stored all inforations about the transaction currently being executed).
-- **Return Values**: The function must not return any values.
-- **Visibility**: The function should be private.
-- **Optional Parameter**: The parameter list may optionally begin by accepting the module's [one-time witness](https://docs.iota.org/developer/iota-101/move-overview/one-time-witness) by value.
-
-```move
-fun init (ctx: &mut TxContext){
-      let oracle = Oracle {
-        id: object::new(ctx),
-        addr: ctx.sender(),
-        deadline: 0
-      };
-      transfer::share_object(oracle);
+ ```move
+ public fun initialize(deadline: u64, ctx: &mut TxContext){
+    let oracle = Oracle {
+      id: object::new(ctx),
+      addr: ctx.sender(),
+      deadline: deadline 
+    };
+    transfer::share_object(oracle);
   }
 ```
 The function instantiates an Oracle, which is subsequently shared across the chain via the [share_object](https://docs.iota.org/references/framework/testnet/iota-framework/transfer#function-share_object) function and get accessible the oracle instance for reads and writes by any transaction.
-
-To set the deadline the Oracle can use the `initialize` function: 
- ```move
- public fun initialize(deadline: u64, oracle: &mut Oracle, ctx: &mut TxContext){
-    assert!(ctx.sender() == oracle.addr, EPermissionDenied);
-    oracle.deadline = deadline;
-  }
-```
 #### Join
 
 The `join1` function enables a user to create a bet struct by specifying a wager amount and publish it on the blockchain. This initiates a pending state awaiting counterparty participation. A second user may then join the existing bet by invoking `join2`, which requires passing the identical wager amount originally specified in the bet struct.
