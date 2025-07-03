@@ -7,7 +7,6 @@ use escrow::escrow::{Self, Escrow};
 use iota::test_scenario::{Self, Scenario};
 use iota::coin::{Self, Coin};
 
-const EEmptyInventory: u64 = 2;
 const EPayBadImplementation: u64 = 3;
 const ERefundBadImplementation: u64 = 4;
 
@@ -16,21 +15,10 @@ const BUYER: address = @0xFACE;
 const PAY: bool = true;
 const REFUND: bool = false;
 
-fun setup(): Scenario{
-    let mut scenario = test_scenario::begin(SELLER);
+fun initialize_test(sender: address): Scenario{
+    let mut scenario = test_scenario::begin(sender);
     let ctx = scenario.ctx();
-    escrow::init_test(ctx);
-    scenario
-}
-
-fun initialize_test(sender: address, mut scenario: Scenario): Scenario{
-
-    scenario.next_tx(sender);
-    assert!(test_scenario::has_most_recent_shared<Escrow>(), EEmptyInventory);
-    let mut escrow = scenario.take_shared<Escrow>();
-    let ctx = scenario.ctx();
-    escrow::initialize(BUYER, 1000, &mut escrow, ctx);
-    test_scenario::return_shared(escrow);
+    escrow::initialize(BUYER, 1000, ctx);
     scenario
 }
 
@@ -58,7 +46,7 @@ fun pay_or_refund_test(pay: bool, sender: address, mut scenario: Scenario): Scen
 
 #[test]
 public fun intended_way_pay(){
-    let mut scenario = initialize_test(SELLER, setup());
+    let mut scenario = initialize_test(SELLER);
     
     let ctx = scenario.ctx();
     let amount = coin::mint_for_testing(1000, ctx);
@@ -71,7 +59,7 @@ public fun intended_way_pay(){
 
 #[test]
 public fun intended_way_refund(){
-    let mut scenario = initialize_test(SELLER, setup());
+    let mut scenario = initialize_test(SELLER);
 
     let ctx = scenario.ctx();
     let amount = coin::mint_for_testing(1000, ctx);
@@ -83,22 +71,8 @@ public fun intended_way_refund(){
 }
 
 #[test, expected_failure(abort_code = escrow::EPermissionDenied)]
-public fun wrong_initializer(){
-    let scenario = initialize_test(BUYER, setup());
-
-    scenario.end();
-}
-
-#[test, expected_failure(abort_code = escrow::EPermissionDenied)]
-public fun double_initialization(){
-    let scenario = initialize_test(SELLER, setup());
-    let scenario = initialize_test(SELLER, scenario);
-    scenario.end();
-}
-
-#[test, expected_failure(abort_code = escrow::EPermissionDenied)]
 public fun wrong_depositer(){
-    let mut scenario = initialize_test(SELLER, setup());
+    let mut scenario = initialize_test(SELLER);
 
     let ctx = scenario.ctx();
     let amount = coin::mint_for_testing<IOTA>(1000, ctx);
@@ -109,7 +83,7 @@ public fun wrong_depositer(){
 
 #[test, expected_failure(abort_code = escrow::EPermissionDenied)]
 public fun wrong_state_deposit(){
-    let mut scenario = initialize_test(SELLER, setup());
+    let mut scenario = initialize_test(SELLER);
 
     let ctx = scenario.ctx();
     let amount = coin::mint_for_testing(1000, ctx);
@@ -124,7 +98,7 @@ public fun wrong_state_deposit(){
 
 #[test, expected_failure(abort_code = escrow::EWrongAmount)]
 public fun wrong_amount(){
-    let mut scenario = initialize_test(SELLER, setup());
+    let mut scenario = initialize_test(SELLER);
 
     let ctx = scenario.ctx();
     let amount = coin::mint_for_testing(999, ctx);
@@ -135,7 +109,7 @@ public fun wrong_amount(){
 
 #[test, expected_failure(abort_code = escrow::EPermissionDenied)]
 public fun wrong_state_pay(){
-    let scenario = initialize_test(SELLER, setup());
+    let mut scenario = initialize_test(SELLER);
 
     let scenario = pay_or_refund_test(PAY, BUYER, scenario);
     scenario.end();
@@ -143,7 +117,7 @@ public fun wrong_state_pay(){
 
 #[test, expected_failure(abort_code = escrow::EPermissionDenied)]
 public fun wrong_buyer_pay(){
-    let mut scenario = initialize_test(SELLER, setup());
+    let mut scenario = initialize_test(SELLER);
 
     let ctx = scenario.ctx();
     let amount = coin::mint_for_testing(1000, ctx);
@@ -155,7 +129,7 @@ public fun wrong_buyer_pay(){
 
 #[test, expected_failure(abort_code = escrow::EPermissionDenied)]
 public fun wrong_state_refund(){
-    let scenario = initialize_test(SELLER, setup());
+    let mut scenario = initialize_test(SELLER);
 
     let scenario = pay_or_refund_test(REFUND, SELLER, scenario);
     scenario.end();
@@ -163,7 +137,7 @@ public fun wrong_state_refund(){
 
 #[test, expected_failure(abort_code = escrow::EPermissionDenied)]
 public fun wrong_seller_refund(){
-    let mut scenario = initialize_test(SELLER, setup());
+    let mut scenario = initialize_test(SELLER);
 
     let ctx = scenario.ctx();
     let amount = coin::mint_for_testing(1000, ctx);
@@ -175,7 +149,7 @@ public fun wrong_seller_refund(){
 
 #[test, expected_failure(abort_code = test_scenario::EEmptyInventory)]
 public fun pay_and_refund(){
-    let mut scenario = initialize_test(SELLER, setup());
+    let mut scenario = initialize_test(SELLER);
 
     let ctx = scenario.ctx();
     let amount = coin::mint_for_testing(1000, ctx);
