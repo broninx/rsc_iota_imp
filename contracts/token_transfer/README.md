@@ -20,42 +20,22 @@ any amount of the token deposited in the contract.
   
 ## Implementation
 
-The token transfer implementation shares the core structure of [simple transfer](https://github.com/broninx/rsc_iota_imp/tree/main/contracts/simple_transfer) but introduces a critical enhancement: a generic type system that extends support to any token type rather than being restricted to IOTA. This modification requires the sender to specify both the recipient address and the token type, which is why the function evolved from set_receiver to createWallet directly.
+The token transfer implementation shares the core structure of [simple transfer](https://github.com/broninx/rsc_iota_imp/tree/main/contracts/simple_transfer) but introduces a critical enhancement: a generic type system that extends support to any token type rather than being restricted to IOTA. This modification requires the sender to specify both the recipient address and the token type, which is why the function evolved from initialize to initialize<T> directly.
 
-In deployment time we save the owner of the contract in it:
-
-```move
-fun init( ctx: &mut TxContext){
-    let owner = Owner {
-        id: object::new(ctx),
-        addr: ctx.sender()
-    };
-    transfer::public_freeze_object(owner);
-} 
-```
-
-### Create Wallet
+### Initialize
 
 ```move
-public fun createWallet<T>(receiver: address, owner: &Owner, ctx: &mut TxContext){
-    assert!(ctx.sender() == owner.addr, EPermissionsDenied);
+public fun initialize<T>(receiver: address, ctx: &mut TxContext){
     let wallet = Wallet<T>{
         id: object::new(ctx),
         balance: balance::zero<T>(),
-        owner: owner.addr,
+        owner: ctx.sender(),
         receiver: receiver,
-        initialized: true
     };
     transfer::share_object(wallet);
 }
 ```
 
-The createWallet function accepts three inputs:
-1. The recipient’s address
-2. The owner instance shared in the smart contract
-3. The transaction context
-
-First, it verifies that the transaction sender is the authorized owner of the wallet. If the check succeed, the function generates a wallet with all parameter passed as field of it.
 
 ## Implementation differences
 
