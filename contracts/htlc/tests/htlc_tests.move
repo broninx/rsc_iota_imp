@@ -13,29 +13,15 @@ const EEmptyInventory: u64 = 4;
 const OWNER: address = @0xCAFE;
 const RECEIVER: address = @0xFACE;
 
-public fun setup(): test_scenario::Scenario {
-    let mut scenario = test_scenario::begin(OWNER);
-    {
-        let ctx = test_scenario::ctx(&mut scenario);
-        htlc::init_test(ctx);
-    };
-    scenario
-}
-
-public fun initialize_htlc(sender: address, mut scenario: test_scenario::Scenario): test_scenario::Scenario {
-    test_scenario::next_tx(&mut scenario, sender);
-    {
-        assert!(test_scenario::has_most_recent_shared<Htlc>(), EEmptyInventory);
-        let mut htlc = test_scenario::take_shared<Htlc>(&scenario);
-        let ctx = test_scenario::ctx(&mut scenario);
-        let hash = b"Hello";
-        let two_min = 120000;
-        let coin = coin::mint_for_testing<IOTA>(1000, ctx);
-        let clock = clock::create_for_testing(ctx);
-        htlc::initialize(RECEIVER, hash, two_min, coin, &mut htlc, &clock, ctx);
-        test_scenario::return_shared(htlc);
-        clock::destroy_for_testing(clock);
-    };
+public fun initialize_htlc(sender: address): test_scenario::Scenario {
+    let mut scenario = test_scenario::begin(sender);
+    let ctx = test_scenario::ctx(&mut scenario);
+    let hash = b"Hello";
+    let two_min = 120000;
+    let coin = coin::mint_for_testing<IOTA>(1000, ctx);
+    let clock = clock::create_for_testing(ctx);
+    htlc::initialize(RECEIVER, hash, two_min, coin, &clock, ctx);
+    clock::destroy_for_testing(clock);
     scenario
 }
 
@@ -57,7 +43,7 @@ public fun reveal_test(
 #[test]
 fun intended_way_reveal() {
 
-    let scenario = initialize_htlc(OWNER, setup());
+    let scenario = initialize_htlc(OWNER);
 
     let scenario = reveal_test(b"Hello", OWNER, scenario);
     test_scenario::end(scenario);
@@ -66,7 +52,7 @@ fun intended_way_reveal() {
 #[test]
 fun intended_way_timeout() {
 
-    let mut scenario = initialize_htlc(OWNER, setup());
+    let mut scenario = initialize_htlc(OWNER);
 
     test_scenario::next_tx(&mut scenario, OWNER);
     {
@@ -82,36 +68,29 @@ fun intended_way_timeout() {
     test_scenario::end(scenario);
 }
 
-#[test, expected_failure(abort_code = htlc::EJustInitialized)]
-fun double_initialize(){
-    let scenario = initialize_htlc(OWNER, setup());
-    let scenario = initialize_htlc(OWNER, scenario);
-    test_scenario::end(scenario);
-}
-
 #[test, expected_failure(abort_code = htlc::EPermissionDenied)]
 fun receiver_initialize(){
-    let scenario = initialize_htlc(RECEIVER, setup());
+    let scenario = initialize_htlc(RECEIVER);
     test_scenario::end(scenario);
 }
 
 #[test, expected_failure(abort_code = htlc::EPermissionDenied)]
 fun receiver_reveal(){
-    let scenario = initialize_htlc(OWNER, setup());
+    let scenario = initialize_htlc(OWNER);
     let scenario = reveal_test(b"Hello", RECEIVER, scenario);
     test_scenario::end(scenario);
 }
 
 #[test, expected_failure(abort_code = htlc::EWrongSecret)]
 fun wrong_secret(){
-    let scenario = initialize_htlc(OWNER, setup());
+    let scenario = initialize_htlc(OWNER);
     let scenario = reveal_test(b"XD", OWNER, scenario);
     test_scenario::end(scenario);
 }
 
 #[test, expected_failure(abort_code = htlc::ETimeNotFinished)]
 fun time_not_finished(){
-    let mut scenario = initialize_htlc(OWNER, setup());
+    let mut scenario = initialize_htlc(OWNER);
     test_scenario::next_tx(&mut scenario, OWNER);
     {
         assert!(test_scenario::has_most_recent_shared<Htlc>(), EEmptyInventory);
