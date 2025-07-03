@@ -12,26 +12,16 @@ public struct Wallet has key {
     balance: Balance<IOTA>,
     owner: address,
     receiver: address,
-    initialized: bool
 } 
 
-fun init( ctx: &mut TxContext){
+public fun initialize(receiver: address, ctx: &mut TxContext){
     let wallet = Wallet {
         id: object::new(ctx),
         balance: balance::zero<IOTA>(),
         owner: ctx.sender(),
-        receiver: ctx.sender(),
-        initialized: false
+        receiver: receiver,
     };
     transfer::share_object(wallet);
-} 
-
-public fun set_receiver(receiver: address,wallet: &mut Wallet, ctx: &mut TxContext){
-    assert!(!wallet.initialized, EPermissionsDenied);
-    assert!(ctx.sender() == wallet.owner, EPermissionsDenied);
-
-    wallet.receiver = receiver;
-    wallet.initialized = true;
 }
 
 public fun deposit(amount: Coin<IOTA>,wallet:&mut Wallet, ctx: &mut TxContext){
@@ -54,13 +44,12 @@ public fun wallet_amount(wallet: &Wallet): u64 {
     wallet.balance.value()
 }
 
-entry fun initialize(ctx: &mut TxContext){
+entry fun initialize_test(ctx: &mut TxContext){
     let wallet = Wallet {
         id: object::new(ctx),
         balance: balance::zero<IOTA>(),
         owner: ctx.sender(),
         receiver: @0xFACE,
-        initialized: false
     };
     transfer::share_object(wallet);
 }

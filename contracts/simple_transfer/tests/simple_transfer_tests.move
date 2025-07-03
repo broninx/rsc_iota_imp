@@ -15,7 +15,7 @@ const RECEIVER: address = @0xFACE;
 fun setup(): Scenario{
     let mut scenario = ts::begin(OWNER);
     let ctx = scenario.ctx();
-    simple_transfer::initialize(ctx);
+    simple_transfer::initialize_test(ctx);
     scenario
 }
 
