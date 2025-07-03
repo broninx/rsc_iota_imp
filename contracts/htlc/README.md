@@ -33,17 +33,17 @@ public fun initialize(
     preimage: vector<u8>, 
     timeout: u64, 
     coin: Coin<IOTA>,
-    htlc: &mut Htlc,
     clock: &Clock, 
     ctx: &mut TxContext){
-    assert!(ctx.sender() == htlc.committer, EPermissionDenied);
-    assert!(!htlc.initialized, EJustInitialized);
-
-    htlc.receiver = receiver;
-    htlc.hash = hash::keccak256(&preimage);
-    htlc.deadline = clock::timestamp_ms(clock) + timeout;
-    htlc.amount.join(coin::into_balance(coin));
-    htlc.initialized = true;
+    let htlc = Htlc {
+        id: object::new(ctx),
+        committer: ctx.sender(),
+        receiver: receiver,
+        hash: hash::keccak256(&preimage),
+        deadline: clock::timestamp_ms(clock) + timeout,
+        amount: coin::into_balance(coin),
+    };
+    transfer::share_object(htlc);
 }
 ```
 
@@ -53,7 +53,8 @@ The committer must provide the following parameters during initialization via th
 - **Timeout Duration**: A predefined period (in milliseconds) before the contract expires.
 - **hash phrase**: A secret bitstring (that will be automatically changed with his respective keccak-256 digest by the [keccak256 function](https://docs.iota.org/references/framework/testnet/iota-framework/hash#function-keccak256))
 
-The function automatically captures the current timestamp (in ms) as a clock parameter, which is combined with the `deadline` to calculate the deadline.
+
+The initialize function instantiates an HTLC struct, mapping supplied parameters to their respective struct fields. Crucially, the preimage is stored as its Keccak-256 digest (computed via the hash module's keccak256 function). The initialize function automatically records the current timestamp (in milliseconds) and combines this with the deadline parameter to compute the final deadline. The initialized struct is then persisted on-chain.
 
 ### Reveal
 
