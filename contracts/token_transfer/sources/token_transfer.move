@@ -12,30 +12,14 @@ public struct Wallet<phantom T> has key {
     balance: balance::Balance<T>,
     owner: address,
     receiver: address,
-    initialized: bool
 } 
 
-public struct Owner has key, store {
-    id: UID, 
-    addr: address
-  }
-
-fun init( ctx: &mut TxContext){
-    let owner = Owner {
-        id: object::new(ctx),
-        addr: ctx.sender()
-    };
-    transfer::public_freeze_object(owner);
-} 
-
-public fun createWallet<T>(receiver: address, owner: &Owner, ctx: &mut TxContext){
-    assert!(ctx.sender() == owner.addr, EPermissionsDenied);
+public fun createWallet<T>(receiver: address, ctx: &mut TxContext){
     let wallet = Wallet<T>{
         id: object::new(ctx),
         balance: balance::zero<T>(),
-        owner: owner.addr,
+        owner: ctx.sender(),
         receiver: receiver,
-        initialized: true
     };
     transfer::share_object(wallet);
 }
@@ -60,18 +44,12 @@ public fun wallet_amount<T>(wallet: &Wallet<T>): u64 {
     wallet.balance.value()
 }
 
-entry fun initialize(ctx: &mut TxContext){
-  let owner = Owner {
-      id: object::new(ctx),
-      addr: ctx.sender()
-    };
+entry fun initialize_test(ctx: &mut TxContext){
     let wallet = Wallet {
         id: object::new(ctx),
         balance: balance::zero<IOTA>(),
         owner: ctx.sender(),
         receiver: @0xFACE,
-        initialized: false
     };
     transfer::share_object(wallet);
-    transfer::public_freeze_object(owner);
 }
