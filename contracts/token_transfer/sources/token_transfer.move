@@ -14,7 +14,7 @@ public struct Wallet<phantom T> has key {
     receiver: address,
 } 
 
-public fun createWallet<T>(receiver: address, ctx: &mut TxContext){
+public fun initialize<T>(receiver: address, ctx: &mut TxContext){
     let wallet = Wallet<T>{
         id: object::new(ctx),
         balance: balance::zero<T>(),
