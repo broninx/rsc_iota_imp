@@ -24,15 +24,19 @@ Once the deposit action has been performed, exactly one of the following actions
 
 ### Initialization
 
-The initialization process is divided into two distinct phases: the `init` function and the subsequent `initialize` step (where escrow-specific data, such as the `buyer` and the required `amount_required`, is registered within the contract)
+The initialization process consist only in the `initialize` step (where escrow-specific data, such as the `buyer` and the required `amount_required`, is registered within the contract created in the function)
 
 ```move
-public fun initialize (buyer: address, amount_required: u64, escrow: &mut Escrow, ctx: &mut TxContext){
-    assert!(escrow.seller == ctx.sender(), EPermissionDenied);
-    assert!(escrow.state == INIT, EPermissionDenied);
-    escrow.buyer = buyer;
-    escrow.amount_required = amount_required;
-    escrow.state = IDLE;
+public fun initialize (buyer: address, amount_required: u64, ctx: &mut TxContext){
+    let escrow = Escrow {
+        id: object::new(ctx),
+        buyer: buyer,
+        seller: ctx.sender(),
+        amount_required: amount_required,
+        amount: balance::zero<IOTA>(),
+        state: IDLE 
+    };
+    transfer::share_object(escrow);
 }
 ```
 
