@@ -15,20 +15,11 @@ const RECIPIENT: address = @0xFACE;
 const DONOR1: address = @0xCAEF;
 const DONOR2: address = @0xFECA;
 
-fun setup(): Scenario{
+fun initialize_test(): Scenario{
     let mut scenario = test_scenario::begin(OWNER);
     let ctx = test_scenario::ctx(&mut scenario);
-    crowdfund::init_test(ctx);
-    scenario
-}
-
-fun initialize_test(mut scenario: Scenario): Scenario{
-    test_scenario::next_tx(&mut scenario, OWNER);
-    let mut crowdfund = test_scenario::take_shared<Crowdfund>(&scenario);
-    let ctx = test_scenario::ctx(&mut scenario);
     let clock = clock::create_for_testing(ctx);
-    crowdfund::initialize(RECIPIENT, 6000, 6, &mut crowdfund, &clock, ctx);
-    test_scenario::return_shared(crowdfund);
+    crowdfund::initialize(RECIPIENT, 6000, 6, &clock, ctx);
     clock.destroy_for_testing();
     scenario
 }
@@ -61,7 +52,7 @@ fun reclaim_test(sender: address, clock: &Clock, mut scenario: Scenario): Scenar
 
 #[test]
 public fun initended_way_goal_achived(){
-    let mut scenario = initialize_test(setup());
+    let mut scenario = initialize_test();
 
     let ctx = test_scenario::ctx(&mut scenario);
     let mut clock = clock::create_for_testing(ctx);
@@ -80,7 +71,7 @@ public fun initended_way_goal_achived(){
 
 #[test]
 public fun initended_way_goal_not_achived(){
-    let mut scenario = initialize_test(setup());
+    let mut scenario = initialize_test();
 
     let ctx = test_scenario::ctx(&mut scenario);
     let mut clock = clock::create_for_testing(ctx);
@@ -97,21 +88,9 @@ public fun initended_way_goal_not_achived(){
     test_scenario::end(scenario);
 }
 
-#[test, expected_failure(abort_code = crowdfund::ENotInitialized)]
-public fun not_initialized_donate(){
-    let mut scenario = setup();
-
-    let ctx = test_scenario::ctx(&mut scenario);
-    let clock = clock::create_for_testing(ctx);
-    let scenario = donate_test(1000, DONOR1, &clock, scenario);
-
-    clock.destroy_for_testing();
-    test_scenario::end(scenario);
-}
-
 #[test, expected_failure(abort_code = crowdfund::ETimeFinished)]
 public fun time_finished_donate(){
-    let mut scenario = initialize_test(setup());
+    let mut scenario = initialize_test();
 
     let ctx = test_scenario::ctx(&mut scenario);
     let mut clock = clock::create_for_testing(ctx);
@@ -124,7 +103,7 @@ public fun time_finished_donate(){
 
 #[test, expected_failure(abort_code = crowdfund::EPermissionDenied)]
 public fun withdraw_not_recipient(){
-    let mut scenario = initialize_test(setup());
+    let mut scenario = initialize_test();
 
     let ctx = test_scenario::ctx(&mut scenario);
     let mut clock = clock::create_for_testing(ctx);
@@ -139,7 +118,7 @@ public fun withdraw_not_recipient(){
 
 #[test, expected_failure(abort_code = crowdfund::ETimeNotFinished)]
 public fun time_not_finished_withdraw(){
-    let mut scenario = initialize_test(setup());
+    let mut scenario = initialize_test();
 
     let ctx = test_scenario::ctx(&mut scenario);
     let mut clock = clock::create_for_testing(ctx);
@@ -154,7 +133,7 @@ public fun time_not_finished_withdraw(){
 
 #[test, expected_failure(abort_code = crowdfund::EGoalNotAchived)]
 public fun goal_not_achived_withdraw(){
-    let mut scenario = initialize_test(setup());
+    let mut scenario = initialize_test();
 
     let ctx = test_scenario::ctx(&mut scenario);
     let mut clock = clock::create_for_testing(ctx);
@@ -169,7 +148,7 @@ public fun goal_not_achived_withdraw(){
 
 #[test, expected_failure(abort_code = crowdfund::ETimeNotFinished)]
 public fun time_not_finished_reclaim(){
-    let mut scenario = initialize_test(setup());
+    let mut scenario = initialize_test();
 
     let ctx = test_scenario::ctx(&mut scenario);
     let mut clock = clock::create_for_testing(ctx);
@@ -184,7 +163,7 @@ public fun time_not_finished_reclaim(){
 
 #[test, expected_failure(abort_code = crowdfund::EGoalAchived)]
 public fun goal_achived_reclaim(){
-    let mut scenario = initialize_test(setup());
+    let mut scenario = initialize_test();
 
     let ctx = test_scenario::ctx(&mut scenario);
     let mut clock = clock::create_for_testing(ctx);
@@ -199,7 +178,7 @@ public fun goal_achived_reclaim(){
 
 #[test, expected_failure(abort_code = crowdfund::ENotDonor)]
 public fun not_donor_reclaim(){
-    let mut scenario = initialize_test(setup());
+    let mut scenario = initialize_test();
 
     let ctx = test_scenario::ctx(&mut scenario);
     let mut clock = clock::create_for_testing(ctx);

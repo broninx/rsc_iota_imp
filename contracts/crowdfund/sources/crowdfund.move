@@ -6,13 +6,11 @@ use iota::vec_map::{Self, VecMap};
 use iota::coin::{Self, Coin};
 
 const EPermissionDenied: u64 = 0;
-const EJustInit: u64 = 1;
-const ETimeFinished: u64 = 2;
-const ETimeNotFinished: u64 = 4;
-const EGoalNotAchived: u64 = 5;
-const ENotInitialized: u64 = 6;
-const EGoalAchived: u64 = 7;
-const ENotDonor: u64 = 8;
+const ETimeFinished: u64 = 1;
+const ETimeNotFinished: u64 = 2;
+const EGoalNotAchived: u64 = 3;
+const EGoalAchived: u64 = 4;
+const ENotDonor: u64 = 5;
 
 public struct Crowdfund has key {
     id: UID,
@@ -22,7 +20,6 @@ public struct Crowdfund has key {
     goal: u64, // of IOTA coin
     amount: u64, // of IOTA coin
     deadline: u64, // in ms
-    initialized: bool
 }
 
 public fun destroy(self: Crowdfund){
@@ -34,7 +31,6 @@ public fun destroy(self: Crowdfund){
         goal: _,
         amount: _,
         deadline: _,
-        initialized:_ 
     } = self;
     object::delete(id);
     donors.destroy_empty();
@@ -49,26 +45,28 @@ fun init(ctx: &mut TxContext){
         goal: 0,
         amount: 0,
         deadline: 0,
-        initialized: false
     };
     transfer::share_object(crowdfund);
 }
 
 //deadline field must be in hours
-public fun initialize(recipient: address, goal: u64, deadline: u64,crowdfund: &mut Crowdfund, clock: &Clock, ctx: &mut TxContext){
-    assert!(ctx.sender() == crowdfund.admin, EPermissionDenied);
-    assert!(!crowdfund.initialized, EJustInit); 
-
-    crowdfund.recipient = recipient;
-    crowdfund.goal = goal;
+public fun initialize(recipient: address, goal: u64, deadline: u64, clock: &Clock, ctx: &mut TxContext){
+    let donors = vec_map::empty<address, Coin<IOTA>>();
     let deadline= deadline * 3600000; 
-    crowdfund.deadline = clock.timestamp_ms() + deadline;
-    crowdfund.initialized = true;
+    let crowdfund = Crowdfund {
+        id: object::new(ctx),
+        admin: ctx.sender(),
+        recipient: recipient,
+        donors: donors,
+        goal: goal,
+        amount: 0,
+        deadline: clock.timestamp_ms() + deadline,
+    };
+    transfer::share_object(crowdfund);
 }
 
 public fun donate(donation: Coin<IOTA>, crowdfund: &mut Crowdfund, clock: &Clock, ctx: &mut TxContext){
     assert!(clock.timestamp_ms() <= crowdfund.deadline, ETimeFinished);
-    assert!(crowdfund.initialized, ENotInitialized);
 
     crowdfund.amount = crowdfund.amount + donation.value();
     if (crowdfund.donors.contains(&ctx.sender())){
@@ -108,18 +106,4 @@ public fun reclaim(mut crowdfund: Crowdfund, clock: &Clock, ctx: &mut TxContext)
     }
 }
 
-#[test_only]
-public fun init_test(ctx: &mut TxContext){
-    let donors = vec_map::empty<address, Coin<IOTA>>();
-    let crowdfund = Crowdfund {
-        id: object::new(ctx),
-        admin: ctx.sender(),
-        recipient: ctx.sender(),
-        donors: donors,
-        goal: 0,
-        amount: 0,
-        deadline: 0,
-        initialized: false
-    };
-    transfer::share_object(crowdfund);
-}
+
