@@ -35,19 +35,6 @@ public fun destroy(self: Crowdfund){
     object::delete(id);
     donors.destroy_empty();
 }
-fun init(ctx: &mut TxContext){
-    let donors = vec_map::empty<address, Coin<IOTA>>();
-    let crowdfund = Crowdfund {
-        id: object::new(ctx),
-        admin: ctx.sender(),
-        recipient: ctx.sender(),
-        donors: donors,
-        goal: 0,
-        amount: 0,
-        deadline: 0,
-    };
-    transfer::share_object(crowdfund);
-}
 
 //deadline field must be in hours
 public fun initialize(recipient: address, goal: u64, deadline: u64, clock: &Clock, ctx: &mut TxContext){
