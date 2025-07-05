@@ -13,21 +13,11 @@ const EEmptyInventory: u64 = 4;
 const SELLER: address = @0xCAFE;
 const BIDDER: address = @0xFACE;
 
-fun setup(): Scenario{
+fun initialize_test(): Scenario{
     let mut scenario = test_scenario::begin(SELLER);
     let ctx = test_scenario::ctx(&mut scenario);
-    auction::init_test(ctx);
-    scenario
-}
-
-fun initialize_test(mut scenario: Scenario): Scenario{
-    test_scenario::next_tx(&mut scenario, SELLER);
-    assert!(test_scenario::has_most_recent_shared<Auction>(), EEmptyInventory);
-    let mut auction = test_scenario::take_shared<Auction>(&scenario);
-    let ctx = test_scenario::ctx(&mut scenario);
     let starter_bid = coin::mint_for_testing<IOTA>(500, ctx);
-    auction::initialize(b"pen", starter_bid, 5, &mut auction, ctx);
-    test_scenario::return_shared(auction);
+    auction::initialize(b"pen", starter_bid, 5, ctx);
     scenario
 }
 
@@ -65,7 +55,7 @@ fun end_test(clock: Clock, sender: address, mut scenario: Scenario): Scenario {
 
 #[test]
 public fun intended_way_bid() {
-    let scenario = initialize_test(setup());
+    let scenario = initialize_test();
     
     let mut scenario = start_test(SELLER, scenario);
 
@@ -85,7 +75,7 @@ public fun intended_way_bid() {
 
 #[test]
 public fun intended_way_no_bid() {
-    let scenario = initialize_test(setup());
+    let scenario = initialize_test();
     
     let mut scenario = start_test(SELLER, scenario);
 
@@ -99,7 +89,7 @@ public fun intended_way_no_bid() {
 
 #[test, expected_failure(abort_code = auction::EPermissionDenied)]
 public fun wrong_state_start() {
-    let scenario = initialize_test(setup());
+    let scenario = initialize_test();
     
     let scenario = start_test(SELLER, scenario);
     let scenario = start_test(SELLER, scenario);
@@ -109,7 +99,7 @@ public fun wrong_state_start() {
 
 #[test, expected_failure(abort_code = auction::EPermissionDenied)]
 public fun wrong_sender_start() {
-    let scenario = initialize_test(setup());
+    let scenario = initialize_test();
     
     let scenario = start_test(BIDDER, scenario);
 
@@ -118,7 +108,7 @@ public fun wrong_sender_start() {
 
 #[test, expected_failure(abort_code = auction::EPermissionDenied)]
 public fun wrong_state_bid() {
-    let mut scenario = initialize_test(setup());
+    let mut scenario = initialize_test();
     
     let ctx = test_scenario::ctx(&mut scenario);
     let mut clock = clock::create_for_testing(ctx);
@@ -130,7 +120,7 @@ public fun wrong_state_bid() {
 
 #[test, expected_failure(abort_code = auction::ETimeFinished)]
 public fun wrong_time_bid() {
-    let scenario = initialize_test(setup());
+    let scenario = initialize_test();
     
     let mut scenario = start_test(SELLER, scenario);
 
@@ -144,7 +134,7 @@ public fun wrong_time_bid() {
 
 #[test, expected_failure(abort_code = auction::EBidTooMuchLower)]
 public fun wrong_amount_bid() {
-    let scenario = initialize_test(setup());
+    let scenario = initialize_test();
     
     let mut scenario = start_test(SELLER, scenario);
 
@@ -158,7 +148,7 @@ public fun wrong_amount_bid() {
 
 #[test, expected_failure(abort_code = auction::EPermissionDenied)]
 public fun wrong_state_end() {
-    let mut scenario = initialize_test(setup());
+    let mut scenario = initialize_test();
     
     let ctx = test_scenario::ctx(&mut scenario);
     let mut clock = clock::create_for_testing(ctx);
@@ -170,7 +160,7 @@ public fun wrong_state_end() {
 
 #[test, expected_failure(abort_code = auction::ETimeNotFinished)]
 public fun wrong_time_end() {
-    let scenario = initialize_test(setup());
+    let scenario = initialize_test();
     
     let mut scenario = start_test(SELLER, scenario);
 
@@ -184,7 +174,7 @@ public fun wrong_time_end() {
 
 #[test, expected_failure(abort_code = auction::EPermissionDenied)]
 public fun wrong_sender_end() {
-    let scenario = initialize_test(setup());
+    let scenario = initialize_test();
     
     let mut scenario = start_test(SELLER, scenario);
 

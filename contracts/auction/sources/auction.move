@@ -25,33 +25,22 @@ public struct Auction has key {
     state: u8
 }
 
-fun init(ctx: &mut TxContext){
-    let auction = Auction {
-        id: object::new(ctx),
-        seller: ctx.sender(),
-        bidder: ctx.sender(),
-        thing: b"",
-        top_bid: balance::zero<IOTA>(),
-        deadline: 0,
-        state: INIT
-    };
-    transfer::share_object(auction);
-}
-
 public fun initialize(
     thing: vector<u8>, 
     starter_bid:Coin<IOTA>,
     deadline:u64, // in minutes
-    auction: &mut Auction,
     ctx: &mut TxContext
 ){
-    assert!(ctx.sender() == auction.seller, EPermissionDenied);
-    assert!(auction.state == INIT, EPermissionDenied);
-    auction.thing = thing;
-    let starter_bid = coin::into_balance<IOTA>(starter_bid);
-    auction.top_bid.join(starter_bid);
-    auction.deadline = deadline * 60000;
-    auction.state = ACTIVE;
+    let auction = Auction {
+        id: object::new(ctx),
+        seller: ctx.sender(),
+        bidder: ctx.sender(),
+        thing: thing,
+        top_bid: starter_bid.into_balance<IOTA>(),
+        deadline: deadline * 60000,
+        state: ACTIVE
+    };
+    transfer::share_object(auction);
 }
 
 public fun start(auction: &mut Auction, clock: &Clock, ctx: &mut TxContext){
@@ -66,7 +55,8 @@ public fun bid(bid: Coin<IOTA>, auction: &mut Auction, clock:&Clock, ctx: &mut T
     assert!(bid.value() > auction.top_bid.value(), EBidTooMuchLower);
     assert!(auction.state == ONGOING, EPermissionDenied);
 
-    let low_bid = coin::take(auction.top_bid, auction.top_bid.value(), ctx);
+    let bid_value = auction.top_bid.value();
+    let low_bid = coin::take<IOTA>(&mut auction.top_bid, bid_value, ctx);
     transfer::public_transfer(low_bid, auction.bidder);
 
     let top_bid = coin::into_balance(bid);
