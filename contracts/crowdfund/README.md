@@ -32,7 +32,6 @@ donors can withdraw the amounts they have donated.
 ```move
 public fun donate(donation: Coin<IOTA>, crowdfund: &mut Crowdfund, clock: &Clock, ctx: &mut TxContext){
     assert!(clock.timestamp_ms() <= crowdfund.deadline, ETimeFinished);
-    assert!(crowdfund.initialized, ENotInitialized);
 
     crowdfund.amount = crowdfund.amount + donation.value();
     if (crowdfund.donors.contains(&ctx.sender())){
