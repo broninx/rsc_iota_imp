@@ -31,7 +31,6 @@ The init and initialize functions followed the same implementation patterns, wit
 ```move
 public fun release(vesting: &mut Vesting, clock: &Clock, ctx: &mut TxContext){
     assert!(vesting.beneficiary == ctx.sender(), EPermissionDenied);
-    assert!(vesting.initialized, EPermissionDenied);
 
     let clamped_time = max(vesting.start, min(vesting.end, clock.timestamp_ms()));
     let amount = vesting.balance.value() * (clamped_time - vesting.start)/ (vesting.end - vesting.start);
