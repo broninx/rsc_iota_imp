@@ -24,7 +24,7 @@ After contract creation, the contract supports the following actions:
 ### Init
 
 ```move
-fun init(ctx: &mut TxContext){
+fun initialize(ctx: &mut TxContext){
     let wallet = Wallet {
         id: object::new(ctx),
         owner: ctx.sender(),
