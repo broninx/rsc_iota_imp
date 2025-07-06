@@ -11,14 +11,8 @@ const EWrongState: u64 = 2;
 const EWrongTime: u64 = 3;
 const ELowBalance:u64 = 4;
 
-const INIT: u8 = 0;
 const READY: u8 = 1; 
 const ONGOING: u8 = 2;
-
-public struct Owner has key, store {
-    id: UID,
-    addr: address
-}
 
 public struct Vault<phantom T> has key {
     id: UID,
@@ -32,21 +26,11 @@ public struct Vault<phantom T> has key {
     state: u8 
 }
 
-fun init(ctx: &mut TxContext){
-    let owner = Owner {
-        id: object::new(ctx),
-        addr: ctx.sender()
-      };
-    transfer::share_object(owner);
-}
-
 // wait_time is in seconds
-public fun initialize<T>(recovery_key: vector<u8>, wait_time: u64, owner: Owner, ctx: &mut TxContext){
-    assert!(ctx.sender() == owner.addr, EPermissionDenied);
-    let Owner {id: id, addr: owner} = owner;
+public fun initialize<T>(recovery_key: vector<u8>, wait_time: u64, ctx: &mut TxContext){
     let vault = Vault<T> {
         id: object::new(ctx),
-        owner: owner,
+        owner: ctx.sender(),
         receiver: @0x0,
         amount: balance::zero<T>(),
         withdrawal_amount: 0,
@@ -55,12 +39,10 @@ public fun initialize<T>(recovery_key: vector<u8>, wait_time: u64, owner: Owner,
         deadline: 0,
         state: READY
     };
-    id.delete();
     transfer::share_object(vault);
 }
 
 public fun receive<T>(amount: Coin<T>, vault: &mut Vault<T>){
-    assert!(vault.state != INIT, ENotInitialized);
 
     let amount = coin::into_balance(amount);
     vault.amount.join(amount);
@@ -94,13 +76,4 @@ public fun cancel<T>(recovery_key: vector<u8>, vault: &mut Vault<T>, clock: &Clo
     assert!(vault.recovery_key == recovery_key, EPermissionDenied);
 
     vault.state = READY;
-}
-
-#[test_only]
-public fun init_test(ctx: &mut TxContext) {
-    let owner = Owner {
-        id: object::new(ctx),
-        addr: ctx.sender()
-    };
-    transfer::share_object(owner);
 }
