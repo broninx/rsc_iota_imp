@@ -24,7 +24,7 @@ After creation, the contract supports the following action:
 
 ## Implementation
 
-The init and initialize functions followed the same implementation patterns, with no distinct differences with other implementations.
+The initialize function followed the same implementation patterns, with no distinct differences with other implementations.
 
 ### Release
 
