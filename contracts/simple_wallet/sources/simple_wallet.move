@@ -23,7 +23,7 @@ public struct Transaction has copy, drop, store {
     data: vector<u8>
 }
 
-fun init(ctx: &mut TxContext){
+public fun initialize(ctx: &mut TxContext){
     let wallet = Wallet {
         id: object::new(ctx),
         owner: ctx.sender(),
