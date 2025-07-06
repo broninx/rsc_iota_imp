@@ -2,21 +2,21 @@ module storage::storage;
 
 public struct Storage has key {
     id: UID,
-    bytes_sequence: vector<u8>,
+    byte_sequences: vector<u8>,
     string: vector<u8>
 }
 
 public fun initialize(ctx: &mut TxContext){
     let storage = Storage {
         id: object::new(ctx),
-        bytes_sequence: vector::empty<u8>(),
+        byte_sequences: vector::empty<u8>(),
         string: vector::empty<u8>()
     };
     transfer::share_object(storage);
 }
 
-public fun storeBytes(storage: &mut Storage, bytes_sequence: vector<u8>){
-    storage.bytes_sequence = bytes_sequence;
+public fun storeBytes(storage: &mut Storage, byte_sequences: vector<u8>){
+    storage.byte_sequences = byte_sequences;
 }
 
 public fun storeString(storage: &mut Storage, string: vector<u8>){
@@ -27,7 +27,7 @@ public fun storeString(storage: &mut Storage, string: vector<u8>){
 public fun init_test(ctx: &mut TxContext){
     let storage = Storage {
         id: object::new(ctx),
-        bytes_sequence: vector::empty<u8>(),
+        byte_sequences: vector::empty<u8>(),
         string: vector::empty<u8>()
     };
     transfer::share_object(storage);
