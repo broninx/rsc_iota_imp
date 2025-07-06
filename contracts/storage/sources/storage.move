@@ -6,7 +6,7 @@ public struct Storage has key {
     string: vector<u8>
 }
 
-fun init(ctx: &mut TxContext){
+public fun initialize(ctx: &mut TxContext){
     let storage = Storage {
         id: object::new(ctx),
         bytes_sequence: vector::empty<u8>(),
