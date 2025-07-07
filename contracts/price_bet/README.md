@@ -25,7 +25,7 @@ After creation, the following actions are possible:
 
 ## Implementation
 
-Our solution employs two distinct Sui Move modules to fulfill the contract requirements. The Oracle Module exclusively handles the creation and management of oracle objects, where each oracle instance stores a specific exchange rate value. Separately, the PriceBet Module contains all betting logic and state management. When a player initiates a win action after joining a bet, the function requires a direct reference to an oracle object. Critical security verification occurs through address matching: the oracle reference provided must correspond exactly to the oracle address stored in the PriceBet instance. Only after confirming this identity match does the contract compare the oracle's current exchange rate against the predetermined target rate to determine if the player wins.
+Our solution employs two distinct modules to fulfill the contract requirements. The Oracle Module exclusively handles the creation and management of oracle objects, where each oracle instance stores a specific exchange rate value. Separately, the PriceBet Module contains all betting logic and state management. When a player initiates a win action after joining a bet, the function requires a direct reference to an oracle object. Critical security verification occurs through address matching: the oracle reference provided must correspond exactly to the oracle address stored in the PriceBet instance. Only after confirming this identity match does the contract compare the oracle's current exchange rate against the predetermined target rate to determine if the player wins.
 
 ```move
 public fun win(oracle: &Oracle, mut price_bet: PriceBet, clock: &Clock, ctx: &mut TxContext){
