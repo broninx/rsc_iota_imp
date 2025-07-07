@@ -21,14 +21,10 @@ After creation, the contract supports the following actions:
 
 ### Initialize
 
-During contract deployment, an instance of the `Owner` struct (containing the owner's address) is created. This instance is passed as a parameter to the `initialize` function and immediately destroyed within it to enforce single-use initialization.
-
 ```move
-public fun initialize<T>(shareolders: vector<address>, shares: vector<u64>, owner: Owner, ctx: &mut TxContext){
-    assert!(ctx.sender() == owner.addr, EPermissionDenied);
+public fun initialize<T>(shareolders: vector<address>, shares: vector<u64>, ctx: &mut TxContext){
     assert!(shareolders.length() == shares.length(), EWrongSharesDistribution);
 
-    let Owner {id: id, addr: _} = owner;
     let mut shares_tot = 0;
     let mut vecmap_shareholders = vec_map::empty<address, ShareHolder<T>>();
     let mut i = 0;
@@ -44,16 +40,14 @@ public fun initialize<T>(shareolders: vector<address>, shares: vector<u64>, owne
         shares_tot,
         balance: balance::zero<T>()
     };
-    id.delete();
     transfer::share_object(payment_splitter);
 }
-
 ```
 The initialize function accepts two arrays as parameters:
 1. `shareholders` - an array of addresses
 2. `shares` - an array of integers representing ownership percentages
 
-These arrays must have identical lengths to maintain index correspondence - the shareholder at index **i** receives the share value at index **i**.
+These arrays must have identical lengths to maintain index correspondence, the shareholder at index **i** receives the share value at index **i**.
 
 This data is stored in a mapping where:
 - **Key**: Shareholder address
