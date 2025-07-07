@@ -16,19 +16,16 @@ const USER: address = @0xCEFA;
 fun setup(): Scenario {
     let mut scenario = ts::begin(OWNER);
     let ctx = scenario.ctx();
-    pb::init_test(ctx);
     oracle::createOracle( ORACLE, 10, ctx);
     scenario
 }
 
 fun initialize_test(exchange_rate: u64, sender: address, mut scenario: Scenario): Scenario {
     scenario.next_tx(sender);
-    let mut pb = scenario.take_shared<PriceBet>();
     let oracle = scenario.take_shared<Oracle>();
     let ctx = scenario.ctx();
     let initial_pot = coin::mint_for_testing(1000, ctx);
-    pb::initialize(initial_pot, &oracle, 5, exchange_rate, &mut pb, ctx);
-    ts::return_shared(pb);
+    pb::initialize(initial_pot, &oracle, 5, exchange_rate, ctx);
     ts::return_shared(oracle);
     scenario
 }
@@ -81,16 +78,6 @@ public fun intended_way_winner_player(){
     let scenario = initialize_test(9, OWNER, scenario);
     let scenario = join_test(1000, USER, &clock, scenario);
     clock.increment_for_testing(6000);
-    win_test(USER, &clock, scenario);
-    clock.destroy_for_testing();
-}
-
-#[test, expected_failure(abort_code = pb::EWrongState)]
-public fun wrong_state_join(){
-    let mut scenario = setup();
-    let ctx = scenario.ctx();
-    let clock = clock::create_for_testing(ctx);
-    let scenario = join_test(1000, USER, &clock, scenario);
     win_test(USER, &clock, scenario);
     clock.destroy_for_testing();
 }

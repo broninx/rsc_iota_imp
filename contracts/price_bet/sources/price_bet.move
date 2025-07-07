@@ -1,19 +1,17 @@
 module price_bet::price_bet;
 
-use iota::balance::{Self, Balance};
+use iota::balance::Balance;
 use iota::iota::IOTA;
 use iota::clock::Clock;
 use iota::coin::{Self, Coin};
 use price_bet::oracle::Oracle;
 
-const EPermissionDenied: u64 = 0;
 const EWrongState: u64 = 1;
 const EWrongAmount:u64 = 2;
 const EWrongOracle: u64 = 3;
 const EWrongTime: u64 = 4;
 const ENotWin: u64 = 5;
 
-const INIT: u8 = 0;
 const IDLE: u8 = 1;
 const ONGOING: u8 = 2;
 
@@ -44,29 +42,19 @@ public fun destroy(self: PriceBet){
     pot.destroy_zero();
 }
 
-fun init(ctx: &mut TxContext) {
+//deadline is in minutes
+public fun initialize(initial_pot: Coin<IOTA>, oracle: &Oracle, deadline: u64, exchange_rate: u64, ctx: &mut TxContext){
     let price_bet = PriceBet {
         id: object::new(ctx),
         owner: ctx.sender(),
         player: @0x0,
-        oracle: @0x0,
-        deadline: 0,
-        exchange_rate: 0,
-        pot: balance::zero(),
-        state: INIT
+        oracle: oracle.addr(),
+        deadline: deadline * 60000,
+        exchange_rate: exchange_rate,
+        pot: initial_pot.into_balance(),
+        state: IDLE
     };
     transfer::share_object(price_bet);
-}
-
-//deadline is in minutes
-public fun initialize(initial_pot: Coin<IOTA>, oracle: &Oracle, deadline: u64, exchange_rate: u64,price_bet: &mut PriceBet, ctx: &mut TxContext){
-    assert!(ctx.sender() == price_bet.owner, EPermissionDenied);
-    assert!(price_bet.state == INIT, EWrongState);
-    price_bet.pot.join(initial_pot.into_balance());
-    price_bet.oracle = oracle.addr();
-    price_bet.deadline = deadline * 60000;
-    price_bet.exchange_rate = exchange_rate;
-    price_bet.state = IDLE;
 }
 
 public fun join(coin: Coin<IOTA>, price_bet: &mut PriceBet, clock: &Clock, ctx: &mut TxContext){
@@ -98,19 +86,4 @@ public fun timeout(mut price_bet: PriceBet, clock: &Clock, ctx: &mut TxContext){
     let recipient = price_bet.owner;
     price_bet.destroy();
     transfer::public_transfer(coin, recipient);
-}
-
-#[test_only]
-public fun init_test(ctx: &mut TxContext) {
-    let price_bet = PriceBet {
-        id: object::new(ctx),
-        owner: ctx.sender(),
-        player: @0x0,
-        oracle: @0x0,
-        deadline: 0,
-        exchange_rate: 0,
-        pot: balance::zero(),
-        state: INIT
-    };
-    transfer::share_object(price_bet);
 }
