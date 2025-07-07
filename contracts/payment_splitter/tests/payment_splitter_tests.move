@@ -2,7 +2,7 @@
 #[test_only]
 module payment_splitter::payment_splitter_tests; 
 
-use payment_splitter::payment_splitter::{Self as ps, PaymentSplitter, Owner};
+use payment_splitter::payment_splitter::{Self as ps, PaymentSplitter};
 use iota::test_scenario::{Self as ts, Scenario};
 use iota::iota::IOTA;
 use iota::coin;
@@ -17,18 +17,10 @@ const USER3: address = @0xCEFA;
 const USER4: address = @0xFACE;
 const USER5: address = @0xEFAC;
 
-fun setup(): Scenario{
+fun initialize_test(shareholders: vector<address>, shares: vector<u64>): Scenario{
     let mut scenario = ts::begin(OWNER);
     let ctx = scenario.ctx();
-    ps::init_test(ctx);
-    scenario
-}
-
-fun initialize_test(shareholders: vector<address>, shares: vector<u64>, mut scenario: Scenario): Scenario{
-    scenario.next_tx(OWNER);
-    let owner = scenario.take_shared<Owner>();
-    let ctx = scenario.ctx();
-    ps::initialize<IOTA>(shareholders, shares, owner, ctx);
+    ps::initialize<IOTA>(shareholders, shares, ctx);
     scenario
 }
 
@@ -60,8 +52,7 @@ fun take_amount_test(sender: address, mut scenario: Scenario): Scenario {
 
 #[test]
 public fun intended_way(){
-    let scenario = setup();
-    let scenario = initialize_test(vector[USER1, USER2, USER3, USER4], vector[1, 1, 1, 1], scenario);
+    let scenario = initialize_test(vector[USER1, USER2, USER3, USER4], vector[1, 1, 1, 1]);
     let mut scenario = receive_test(100, scenario);
     release_test(&mut scenario);
     let scenario = take_amount_test(USER1, scenario);
@@ -77,23 +68,20 @@ public fun intended_way(){
 
 #[test, expected_failure(abort_code = ps::EWrongSharesDistribution)]
 public fun wrong_initialzie_vectors(){
-    let scenario = setup();
-    let scenario = initialize_test(vector[USER1, USER2, USER3, USER4], vector[1, 1, 1], scenario);
+    let scenario = initialize_test(vector[USER1, USER2, USER3, USER4], vector[1, 1, 1]);
     scenario.end();
 }
 
 #[test, expected_failure(abort_code = ps::EBalanceEmpty)]
 public fun release_with_empty_balance(){
-    let scenario = setup();
-    let mut scenario = initialize_test(vector[USER1, USER2, USER3, USER4], vector[1, 1, 1, 1], scenario);
+    let mut scenario = initialize_test(vector[USER1, USER2, USER3, USER4], vector[1, 1, 1, 1]);
     release_test(&mut scenario);
     scenario.end();
 }
 
 #[test, expected_failure(abort_code = vec_map::EKeyDoesNotExist)]
 public fun not_receiver_take_amount(){
-    let scenario = setup();
-    let scenario = initialize_test(vector[USER1, USER2, USER3, USER4], vector[1, 1, 1, 1], scenario);
+    let scenario = initialize_test(vector[USER1, USER2, USER3, USER4], vector[1, 1, 1, 1]);
     let mut scenario = receive_test(100, scenario);
     release_test(&mut scenario);
     let scenario = take_amount_test(USER5, scenario);

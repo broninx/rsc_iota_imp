@@ -5,13 +5,7 @@ use iota::balance::{Self, Balance};
 use iota::coin::{Self, Coin};
 
 const EWrongSharesDistribution: u64 = 0;
-const EPermissionDenied: u64 = 1;
 const EBalanceEmpty: u64 = 2;
-
-public struct Owner has key {
-    id: UID,
-    addr: address
-}
 
 public struct ShareHolder<phantom T> has store {
     shares: u64,
@@ -25,19 +19,9 @@ public struct PaymentSplitter<phantom T> has key {
     balance: Balance<T>
 }
 
-fun init(ctx: &mut TxContext) {
-    let owner = Owner {
-        id: object::new(ctx),
-        addr: ctx.sender()
-    };
-    transfer::share_object(owner);
-}
-
-public fun initialize<T>(shareolders: vector<address>, shares: vector<u64>, owner: Owner, ctx: &mut TxContext){
-    assert!(ctx.sender() == owner.addr, EPermissionDenied);
+public fun initialize<T>(shareolders: vector<address>, shares: vector<u64>, ctx: &mut TxContext){
     assert!(shareolders.length() == shares.length(), EWrongSharesDistribution);
 
-    let Owner {id: id, addr: _} = owner;
     let mut shares_tot = 0;
     let mut vecmap_shareholders = vec_map::empty<address, ShareHolder<T>>();
     let mut i = 0;
@@ -53,7 +37,6 @@ public fun initialize<T>(shareolders: vector<address>, shares: vector<u64>, owne
         shares_tot,
         balance: balance::zero<T>()
     };
-    id.delete();
     transfer::share_object(payment_splitter);
 }
 
@@ -84,14 +67,6 @@ public fun take_amount<T>(payment_splitter: &mut PaymentSplitter<T>, ctx: &mut T
 }
 
 #[test_only]
-public fun init_test(ctx: &mut TxContext) {
-    let owner = Owner {
-        id: object::new(ctx),
-        addr: ctx.sender()
-    };
-    transfer::share_object(owner);
-}
-
 public fun balance<T>(self: &PaymentSplitter<T>): &Balance<T>{
     &self.balance
-  }
+}
