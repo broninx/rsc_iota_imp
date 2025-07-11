@@ -33,6 +33,8 @@ If the platform does not support multisig transactions, then step 1 is split in 
 
 ## Implementation 
 
+The module imports the `random` module prior to the `initialize` function to handle randomness in IOTA Move. The `random` module contains two structs: `Random`, a singleton shared object storing the global randomness state in a versioned inner field, and `RandomGenerator`, a unique randomness generator that is derived from the global randomness.
+
 ### Join1 and Redeem_commit
 ```move
 public fun join1<T>(deadline_commit: u64, coin: Coin<T>, hash: vector<u8>, clock: &Clock, ctx: &mut TxContext){
@@ -149,10 +151,12 @@ Upon successful execution, the function returns the entire contract balance to t
 ### Win 
 
 ```move
-public fun win<T>(lottery: Lottery<T>, ctx: &mut TxContext){
+entry fun win<T>(random: &Random, lottery: Lottery<T>, ctx: &mut TxContext){
     assert!(lottery.state == REVEAL2, EWrongState);
+    let mut generator = random::new_generator(random, ctx);
+    let win = generator.generate_u32();
     let winner: address;
-    if ((lottery.hash1.length() + lottery.hash2.length()) % 2 == 0){
+    if (win % 2 == 0){
         winner = lottery.player1;
     } else {
         winner = lottery.player2;
@@ -162,7 +166,7 @@ public fun win<T>(lottery: Lottery<T>, ctx: &mut TxContext){
 }
 ```
 
-The win function serves as the final resolution mechanism once both players have successfully completed the reveal phase. This publicly callable function calculates the combined character length of both players' revealed secrets. Using this total length as a deterministic arbiter, it transfers the entire contract balance to player1 if the sum is even, or to player2 if the sum is odd. This cryptographic length-check provides a trustless, verifiable method to distribute winnings without relying on external randomness or subjective judgment, while ensuring the lottery contract can be securely concluded after execution.
+The `win` function serves as the final resolution step after both players complete the reveal phase. It accepts a reference to a `Random` struct to instantiate a new randomness generator, which produces a random `u32` value to determine the winner: an even value selects Player 1 as the victor, while an odd value designates Player 2. This mechanism ensures impartial winner selection through cryptographically secure randomness.
 
 ## Differences
 
