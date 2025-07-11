@@ -8,6 +8,7 @@ use iota::clock::{Self, Clock};
 use iota::hash::keccak256;
 use iota::iota::IOTA;
 use iota::coin;
+use iota::random;
 
 const PLAYER1: address = @0xCAFE;
 const PLAYER2: address = @0xFACE;
@@ -56,7 +57,12 @@ fun reveal2_test(sender: address, secret: vector<u8>, clock: &Clock, mut scenari
     let ctx = scenario.ctx();
     lottery::reveal2(secret, clock, &mut lottery, ctx);
     ts::return_shared(lottery);
+
+    scenario.next_tx(@0x0);
+    let ctx = scenario.ctx();
+    random::create_for_testing(ctx);
     scenario
+
 }
 
 fun redeem_test(sender: address, clock: &Clock, mut scenario: Scenario){
@@ -70,8 +76,10 @@ fun redeem_test(sender: address, clock: &Clock, mut scenario: Scenario){
 fun win_test(mut scenario: Scenario){
     scenario.next_tx(PLAYER1);
     let lottery = scenario.take_shared<Lottery<IOTA>>();
+    let random = scenario.take_shared<random::Random>();
     let ctx = scenario.ctx();
-    lottery::win(lottery, ctx);
+    lottery::win(&random, lottery, ctx);
+    ts::return_shared(random);
     scenario.end();
 }
 

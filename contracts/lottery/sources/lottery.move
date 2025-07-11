@@ -5,6 +5,7 @@ use iota::balance::Balance;
 use iota::coin::{Self, Coin};
 use iota::clock::Clock;
 use iota::hash::keccak256;
+use iota::random::{Self, Random};
 
 const ETimeExpired: u64 = 0;
 const EWrongAmount: u64 = 1;
@@ -121,10 +122,12 @@ public fun redeem<T>(clock: &Clock, lottery: Lottery<T>, ctx: &mut TxContext){
     transfer::public_transfer( coin::from_balance(balance, ctx), recipient);
 }
 
-public fun win<T>(lottery: Lottery<T>, ctx: &mut TxContext){
+entry fun win<T>(random: &Random, lottery: Lottery<T>, ctx: &mut TxContext){
     assert!(lottery.state == REVEAL2, EWrongState);
+    let mut generator = random::new_generator(random, ctx);
+    let win = generator.generate_u32();
     let winner: address;
-    if ((lottery.hash1.length() + lottery.hash2.length()) % 2 == 0){
+    if (win % 2 == 0){
         winner = lottery.player1;
     } else {
         winner = lottery.player2;
